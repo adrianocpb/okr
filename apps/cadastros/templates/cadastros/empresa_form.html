@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block titulo %}{% if empresa %}Editar {{ empresa.sigla }}{% else %}Nova empresa{% endif %}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'cadastros:empresa_lista' %}">Empresas</a>
+    {% if empresa %} › <a href="{% url 'cadastros:empresa_detalhe' empresa.pk %}">{{ empresa.sigla }}</a>{% endif %}
+  </nav>
+  <h1>{% if empresa %}Editar empresa{% else %}Nova empresa{% endif %}</h1>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% if empresa %}{% url 'cadastros:empresa_detalhe' empresa.pk %}{% else %}{% url 'cadastros:empresa_lista' %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

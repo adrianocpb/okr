@@ -56,7 +56,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E1 — Fundação técnica
+### E1 — Fundação técnica ✅
 
 **Objetivo:** projeto executável localmente, com configuração por ambiente, testes e qualidade automatizados.
 **Dependências:** E0 validada (identidade Git já configurada no repositório).
@@ -81,7 +81,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E2 — Núcleo transversal: base, auditoria, erros e backup
+### E2 — Núcleo transversal: base, auditoria, erros e backup ✅
 
 **Objetivo:** criar os mecanismos dos quais todos os módulos dependem antes que existam dados a proteger.
 **Dependências:** E1.
@@ -108,11 +108,11 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E3 — Empresas e Pessoas
+### E3 — Empresas e Pessoas ✅ (aguardando validação)
 
 **Objetivo:** cadastros base, funcionais e auditados.
 **Dependências:** E2.
-**Entregáveis:** listagem, criação, edição, arquivamento e reativação de Empresas e Pessoas; vínculo pessoa ↔ empresas; tela de responsabilidades da pessoa (vazia até E5); filtros e busca simples.
+**Entregáveis:** listagem, criação, edição, arquivamento e reativação de Empresas e Pessoas; vínculo pessoa ↔ empresas; filtros e busca simples (sem distinguir acentos). A seção de responsabilidades da pessoa entra na E5, junto com os objetivos (não foi criada vazia).
 **Critérios de aceite:**
 - [ ] Unicidade de nome e sigla da empresa e de e-mail da pessoa garantida no banco e com mensagem em pt-BR.
 - [ ] Arquivamento não exclui o registro; o registro arquivado não aparece nas opções de novas atribuições.

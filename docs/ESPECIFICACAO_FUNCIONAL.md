@@ -61,7 +61,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 
 | ID | Requisito |
 |---|---|
-| RF-01 | Cadastrar empresa com nome (obrigatório e único) e sigla/nome curto (obrigatório e único). [Decidido em Q-01: somente esses campos] |
+| RF-01 | Cadastrar empresa com nome (obrigatório e único, sem distinguir maiúsculas, acentos e espaços repetidos) e sigla/nome curto (obrigatória, única, gravada em maiúsculas). [Decidido em Q-01: somente esses campos] |
 | RF-02 | Editar empresa; toda edição gera um registro de auditoria. |
 | RF-03 | Arquivar e reativar empresa. Uma empresa arquivada não recebe novos objetivos, mas seus OKRs continuam consultáveis. |
 | RF-04 | Consultar os OKRs de uma empresa (por ciclo). |
@@ -72,7 +72,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 
 | ID | Requisito |
 |---|---|
-| RF-07 | Cadastrar pessoa com nome (obrigatório), e-mail (opcional e único quando informado) e empresas às quais está vinculada. Uma pessoa pode estar vinculada a várias empresas do grupo [Decidido em Q-02]. |
+| RF-07 | Cadastrar pessoa com nome (obrigatório), e-mail (opcional e único quando informado) e empresas às quais está vinculada. Uma pessoa pode estar vinculada a várias empresas do grupo [Decidido em Q-02] e precisa estar vinculada a **ao menos uma** empresa [Decisão de implementação na E3: todas as responsabilidades exigem vínculo (Q-02b), e o isolamento por empresa depende dele]. Empresas arquivadas não recebem novos vínculos; vínculos existentes são mantidos. |
 | RF-08 | Editar e arquivar pessoa. Uma pessoa arquivada não pode receber novas responsabilidades, mas continua exibida nos registros históricos. |
 | RF-09 | Consultar as responsabilidades de uma pessoa: objetivos como Owner ou Sponsor, KRs e iniciativas como responsável. |
 | RF-10 | Pessoa é uma entidade de negócio, independente de conta de acesso. Uma pessoa pode existir sem login; quando houver autenticação, uma conta de usuário poderá ser associada a uma pessoa. |

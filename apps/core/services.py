@@ -22,8 +22,15 @@ Acao = RegistroAlteracao.Acao
 
 
 def _empresa_id(objeto: models.Model, empresa_id: int | None) -> int | None:
+    """Empresa à qual a alteração pertence, para filtrar a auditoria por empresa.
+
+    Ordem: valor informado, propriedade `empresa_para_auditoria` do modelo,
+    campo `empresa_id`.
+    """
     if empresa_id is not None:
         return empresa_id
+    if hasattr(objeto, "empresa_para_auditoria"):
+        return objeto.empresa_para_auditoria
     return getattr(objeto, "empresa_id", None)
 
 
@@ -33,9 +40,18 @@ def _iguais(antes, depois) -> bool:
     return antes == depois
 
 
-def _campos_auditaveis(objeto: models.Model):
+def _campos_gravaveis(objeto: models.Model):
     for campo in objeto._meta.concrete_fields:
         if campo.name not in CAMPOS_DE_CONTROLE:
+            yield campo
+
+
+def _campos_auditaveis(objeto: models.Model):
+    """Campos registrados na auditoria. Campos derivados (por exemplo, chaves de
+    busca normalizadas) são declarados em `campos_nao_auditados` no modelo."""
+    nao_auditados = getattr(objeto, "campos_nao_auditados", frozenset())
+    for campo in _campos_gravaveis(objeto):
+        if campo.name not in nao_auditados:
             yield campo
 
 
@@ -68,6 +84,13 @@ def _gravar_condicionalmente(objeto: ModeloBase, versao_esperada: int, valores: 
         raise ConflitoDeVersao()
 
 
+def confirmar_versao(objeto: ModeloBase, versao_esperada: int) -> None:
+    """Incrementa a versão sem alterar campos (por exemplo, quando só mudam
+    vínculos). Recusa a operação se a versão estiver desatualizada."""
+    _gravar_condicionalmente(objeto, versao_esperada, {})
+    objeto.refresh_from_db(fields=["versao", "atualizado_em"])
+
+
 @transaction.atomic
 def atualizar(
     objeto: ModeloBase,
@@ -79,23 +102,28 @@ def atualizar(
 ) -> ModeloBase:
     """Aplica `dados` (campo → novo valor) ao objeto, com validação e auditoria.
 
-    Retorna o objeto recarregado do banco. Se nada mudou, não grava nem audita.
+    A comparação antes/depois usa os valores já validados e normalizados pelo
+    modelo (`clean`). Grava todos os campos do objeto, inclusive os derivados,
+    condicionado à versão. Retorna o objeto recarregado do banco. Se nada mudou,
+    não grava nem audita.
     """
-    alteracoes = {}
+    antes = {campo.name: getattr(objeto, campo.name) for campo in _campos_auditaveis(objeto)}
     for nome, novo in dados.items():
-        antigo = getattr(objeto, nome)
-        if not _iguais(antigo, novo):
-            alteracoes[nome] = {"antes": valor_auditavel(antigo), "depois": valor_auditavel(novo)}
+        setattr(objeto, nome, novo)
+    objeto.full_clean()
+
+    alteracoes = {
+        nome: {"antes": valor_auditavel(valor), "depois": valor_auditavel(getattr(objeto, nome))}
+        for nome, valor in antes.items()
+        if not _iguais(valor, getattr(objeto, nome))
+    }
     if not alteracoes:
         if objeto.versao != versao_esperada:
             raise ConflitoDeVersao()
         return objeto
 
-    for nome in alteracoes:
-        setattr(objeto, nome, dados[nome])
-    objeto.full_clean()
-
-    _gravar_condicionalmente(objeto, versao_esperada, {nome: dados[nome] for nome in alteracoes})
+    valores = {campo.attname: getattr(objeto, campo.attname) for campo in _campos_gravaveis(objeto)}
+    _gravar_condicionalmente(objeto, versao_esperada, valores)
     registrar_alteracao(
         objeto=objeto,
         acao=Acao.ALTERACAO,

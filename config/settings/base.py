@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.contas",
     "apps.auditoria",
+    "apps.cadastros",
 ]
 
 MIDDLEWARE = [

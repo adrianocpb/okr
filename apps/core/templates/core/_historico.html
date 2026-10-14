@@ -1,0 +1,29 @@
+{# Histórico de alterações estruturais. Espera `historico` (lista de EntradaHistorico). #}
+<section class="cartao" aria-labelledby="titulo-historico">
+  <h2 id="titulo-historico">Histórico de alterações</h2>
+  {% if historico %}
+    <ol class="historico">
+      {% for entrada in historico %}
+        <li class="historico__item">
+          <div class="historico__cabecalho">
+            <strong>{{ entrada.acao }}</strong>
+            <span class="texto-suave">em {{ entrada.data_hora|date:"d/m/Y H:i" }} por {{ entrada.autor }}</span>
+            {% if not entrada.autor_verificado %}<span class="selo selo--neutro" title="Sem login, a autoria é apenas informada pelo sistema local.">autor não verificado</span>{% endif %}
+          </div>
+          {% if entrada.mudancas %}
+            <table class="tabela tabela--compacta">
+              <thead><tr><th scope="col">Campo</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+              <tbody>
+                {% for mudanca in entrada.mudancas %}
+                  <tr><td>{{ mudanca.campo }}</td><td>{{ mudanca.antes }}</td><td>{{ mudanca.depois }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="texto-suave">Nenhuma alteração registrada.</p>
+  {% endif %}
+</section>

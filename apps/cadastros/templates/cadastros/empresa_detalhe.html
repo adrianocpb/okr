@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ empresa.sigla }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'cadastros:empresa_lista' %}">Empresas</a></nav>
+
+  <div class="cabecalho-pagina">
+    <h1>{{ empresa.nome }} <span class="texto-suave">({{ empresa.sigla }})</span></h1>
+    <div class="acoes">
+      {% if not empresa.arquivado %}
+        <a class="botao botao--primario" href="{% url 'cadastros:empresa_editar' empresa.pk %}">Editar</a>
+        <form method="post" action="{% url 'cadastros:empresa_arquivar' empresa.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ empresa.versao }}">
+          <button type="submit" class="botao">Arquivar</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'cadastros:empresa_reativar' empresa.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ empresa.versao }}">
+          <button type="submit" class="botao botao--primario">Reativar</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if empresa.arquivado %}
+    <p class="aviso aviso--neutro">Empresa arquivada em {{ empresa.arquivado_em|date:"d/m/Y H:i" }}. Ela não recebe novos vínculos; os dados e o histórico continuam disponíveis para consulta.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Nome</dt><dd>{{ empresa.nome }}</dd>
+      <dt>Sigla</dt><dd>{{ empresa.sigla }}</dd>
+      <dt>Cadastrada em</dt><dd>{{ empresa.criado_em|date:"d/m/Y H:i" }}</dd>
+      <dt>Situação</dt><dd>{% if empresa.arquivado %}Arquivada{% else %}Ativa{% endif %}</dd>
+    </dl>
+  </section>
+
+  <section class="cartao" aria-labelledby="titulo-pessoas">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-pessoas">Pessoas vinculadas</h2>
+      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:pessoa_nova' %}?empresa={{ empresa.pk }}">Nova pessoa nesta empresa</a>{% endif %}
+    </div>
+    {% if pessoas %}
+      <ul class="lista-simples">
+        {% for pessoa in pessoas %}
+          <li>
+            <a href="{% url 'cadastros:pessoa_detalhe' pessoa.pk %}">{{ pessoa.nome }}</a>
+            {% if pessoa.email %}<span class="texto-suave">· {{ pessoa.email }}</span>{% endif %}
+            {% if pessoa.arquivado %}<span class="selo selo--neutro">Arquivada</span>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="texto-suave">Nenhuma pessoa vinculada.</p>
+    {% endif %}
+  </section>
+
+  {% include "core/_historico.html" %}
+{% endblock %}

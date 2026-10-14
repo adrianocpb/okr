@@ -65,8 +65,26 @@ class EscopoAcesso:
             return True
         return empresa_id in self.empresas_ids
 
+    @property
+    def irrestrito(self) -> bool:
+        return self.empresas_ids is None
+
     def filtrar(self, queryset: QuerySet, campo: str = "empresa_id") -> QuerySet:
         """Restringe um queryset às empresas do escopo, pelo campo informado."""
         if self.empresas_ids is None:
             return queryset
         return queryset.filter(**{f"{campo}__in": self.empresas_ids})
+
+
+def ator_da_requisicao(request) -> Ator:
+    """Quem está agindo. Sem login (versão local), é sempre o usuário local."""
+    return Ator.local()
+
+
+def escopo_da_requisicao(request) -> EscopoAcesso:
+    """Empresas acessíveis. Sem login (versão local), todas.
+
+    Na etapa de autenticação (E13), estas duas funções passam a derivar o ator e
+    o escopo do usuário autenticado; views e services não precisam mudar.
+    """
+    return EscopoAcesso.todas()

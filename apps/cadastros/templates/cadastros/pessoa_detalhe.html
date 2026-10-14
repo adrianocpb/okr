@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ pessoa.nome }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'cadastros:pessoa_lista' %}">Pessoas</a></nav>
+
+  <div class="cabecalho-pagina">
+    <h1>{{ pessoa.nome }}</h1>
+    <div class="acoes">
+      {% if not pessoa.arquivado %}
+        <a class="botao botao--primario" href="{% url 'cadastros:pessoa_editar' pessoa.pk %}">Editar</a>
+        <form method="post" action="{% url 'cadastros:pessoa_arquivar' pessoa.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ pessoa.versao }}">
+          <button type="submit" class="botao">Arquivar</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'cadastros:pessoa_reativar' pessoa.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ pessoa.versao }}">
+          <button type="submit" class="botao botao--primario">Reativar</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if pessoa.arquivado %}
+    <p class="aviso aviso--neutro">Pessoa arquivada em {{ pessoa.arquivado_em|date:"d/m/Y H:i" }}. Ela não poderá receber novas responsabilidades; os dados e o histórico continuam disponíveis.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Nome</dt><dd>{{ pessoa.nome }}</dd>
+      <dt>E-mail</dt><dd>{{ pessoa.email|default:"—" }}</dd>
+      <dt>Empresas</dt>
+      <dd>
+        {% for empresa in pessoa.empresas_visiveis %}
+          <a href="{% url 'cadastros:empresa_detalhe' empresa.pk %}" class="selo selo--neutro" title="{{ empresa.nome }}">{{ empresa.sigla }}</a>
+        {% empty %}—{% endfor %}
+      </dd>
+      <dt>Cadastrada em</dt><dd>{{ pessoa.criado_em|date:"d/m/Y H:i" }}</dd>
+      <dt>Situação</dt><dd>{% if pessoa.arquivado %}Arquivada{% else %}Ativa{% endif %}</dd>
+    </dl>
+  </section>
+
+  {% include "core/_historico.html" %}
+{% endblock %}

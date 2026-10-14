@@ -126,3 +126,110 @@ code {
 @media (max-width: 600px) {
   .situacao { grid-template-columns: 1fr; }
 }
+
+/* ---------- Componentes de cadastro (E3) ---------- */
+:root {
+  --cor-neutro: #3e4c59;
+  --cor-neutro-fundo: #e4e7eb;
+}
+
+.texto-suave { color: var(--cor-texto-suave); font-weight: normal; }
+
+.trilha { font-size: 0.9rem; margin-bottom: 4px; color: var(--cor-texto-suave); }
+
+.cabecalho-pagina,
+.cabecalho-secao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco);
+}
+.cabecalho-pagina h1 { margin: 8px 0; }
+.cabecalho-secao h2 { margin: 0; }
+
+.acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.acoes form { margin: 0; }
+
+.botao {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+.botao:hover { border-color: var(--cor-marca); }
+.botao--primario { background: var(--cor-marca); border-color: var(--cor-marca); color: var(--cor-marca-contraste); }
+.botao--primario:hover { filter: brightness(1.1); }
+.botao:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #7aa7d6; outline-offset: 1px; }
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin: var(--espaco) 0;
+}
+.filtros label { display: flex; flex-direction: column; font-size: 0.85rem; color: var(--cor-texto-suave); gap: 2px; }
+
+input[type="text"], input[type="search"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 6px;
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
+  max-width: 100%;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+.tabela th, .tabela td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+.tabela th { font-size: 0.85rem; color: var(--cor-texto-suave); font-weight: 600; background: var(--cor-fundo); }
+.tabela .numero { text-align: right; }
+.tabela--compacta { font-size: 0.85rem; margin-top: 6px; }
+.tabela--compacta th, .tabela--compacta td { padding: 4px 8px; }
+
+.selo--neutro { color: var(--cor-neutro); background: var(--cor-neutro-fundo); text-decoration: none; }
+.aviso--neutro { color: var(--cor-neutro); background: var(--cor-neutro-fundo); }
+
+.vazio { padding: var(--espaco); background: var(--cor-superficie); border: 1px dashed var(--cor-borda); border-radius: var(--raio); }
+
+.lista-simples { list-style: none; padding: 0; margin: 0; }
+.lista-simples li { padding: 6px 0; border-bottom: 1px solid var(--cor-borda); }
+.lista-simples li:last-child { border-bottom: 0; }
+
+.paginacao { display: flex; gap: var(--espaco); justify-content: center; padding: var(--espaco) 0; }
+
+.historico { list-style: none; padding: 0; margin: 0; }
+.historico__item { padding: 10px 0; border-bottom: 1px solid var(--cor-borda); }
+.historico__item:last-child { border-bottom: 0; }
+.historico__cabecalho { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* Formulários renderizados pelo Django (form.as_div) */
+.formulario { max-width: 640px; }
+.formulario > div { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+.formulario label { font-weight: 600; }
+.formulario .helptext { font-size: 0.85rem; color: var(--cor-texto-suave); }
+.formulario input[type="text"], .formulario input[type="email"] { width: 100%; }
+.formulario div > div > div { font-weight: normal; }
+.formulario div > div > div label { font-weight: normal; display: flex; gap: 6px; align-items: center; }
+.errorlist { list-style: none; padding: 6px 10px; margin: 0 0 6px; color: var(--cor-erro); background: var(--cor-erro-fundo); border-radius: 6px; }
+.errorlist.nonfield { margin-bottom: 14px; }
+
+@media (max-width: 700px) {
+  .tabela thead { display: none; }
+  .tabela, .tabela tbody, .tabela tr, .tabela td { display: block; width: 100%; }
+  .tabela tr { border-bottom: 1px solid var(--cor-borda); padding: 6px 0; }
+  .tabela td { border: 0; padding: 2px 10px; }
+  .tabela .numero { text-align: left; }
+}

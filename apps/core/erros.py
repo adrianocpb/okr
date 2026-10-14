@@ -22,6 +22,13 @@ class ConflitoDeVersao(ErroDeNegocio):
         )
 
 
+class PermissaoNegada(ErroDeNegocio):
+    status_http = 403
+
+    def __init__(self, mensagem: str = "Você não tem permissão para realizar esta operação."):
+        super().__init__(mensagem)
+
+
 class AcessoNegado(ErroDeNegocio):
     status_http = 404  # não revela a existência de registros de outras empresas
 

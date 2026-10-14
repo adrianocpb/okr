@@ -8,6 +8,14 @@
     Cadastro e acompanhamento dos objetivos, resultados-chave e iniciativas das empresas do grupo.
   </p>
 
+  <section class="cartao" aria-labelledby="titulo-atalhos">
+    <h2 id="titulo-atalhos">Cadastros</h2>
+    <div class="acoes">
+      <a class="botao" href="{% url 'cadastros:empresa_lista' %}">Empresas</a>
+      <a class="botao" href="{% url 'cadastros:pessoa_lista' %}">Pessoas</a>
+    </div>
+  </section>
+
   <section class="cartao" aria-labelledby="titulo-situacao">
     <h2 id="titulo-situacao">Situação do sistema</h2>
     <dl class="situacao">
