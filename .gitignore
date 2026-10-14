@@ -1,0 +1,78 @@
+# =====================================================================
+# Dados, backups e segredos — NUNCA versionar
+# =====================================================================
+# Pasta de dados locais (banco SQLite de desenvolvimento, logs, arquivos gerados)
+var/
+
+# Bancos de dados e arquivos auxiliares do SQLite em qualquer local
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db-journal
+
+# Backups e dumps de banco
+backups/
+*.bak
+*.backup
+*.dump
+*.sql.gz
+
+# Variáveis de ambiente e credenciais (somente o exemplo é versionado)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+
+# Exportações e planilhas que possam conter dados empresariais
+exports/
+*.xlsx
+*.xls
+*.csv
+!tests/**/fixtures/**/*.csv
+
+# =====================================================================
+# Python
+# =====================================================================
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# =====================================================================
+# Django
+# =====================================================================
+staticfiles/
+media/
+*.log
+logs/
+
+# =====================================================================
+# Node (somente se ferramentas JS forem adotadas futuramente)
+# =====================================================================
+node_modules/
+
+# =====================================================================
+# Sistema operacional e editores
+# =====================================================================
+Thumbs.db
+desktop.ini
+.DS_Store
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
