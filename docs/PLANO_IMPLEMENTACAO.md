@@ -108,7 +108,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E3 — Empresas e Pessoas ✅ (aguardando validação)
+### E3 — Empresas e Pessoas ✅
 
 **Objetivo:** cadastros base, funcionais e auditados.
 **Dependências:** E2.
@@ -122,11 +122,11 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E4 — Ciclos
+### E4 — Ciclos ✅ (aguardando validação)
 
 **Objetivo:** gestão de ciclos anuais e trimestrais.
 **Dependências:** E3 (cada empresa tem seus próprios ciclos, decisão Q-03).
-**Entregáveis:** CRUD de ciclos por empresa; associação trimestral → anual da mesma empresa; situação do ciclo; consulta de ciclos anteriores; ação de apoio "gerar trimestres do ano" (cria os 4 trimestres de um ano anual, se aprovada).
+**Entregáveis:** CRUD de ciclos por empresa; associação trimestral → anual da mesma empresa; situação do ciclo; consulta de ciclos anteriores; ação de apoio "gerar trimestres que faltam" (implementada). Situação calculada pelas datas.
 **Critérios de aceite:**
 - [ ] Testes: trimestre fora das datas do anual ou de outra empresa é recusado; sobreposição de ciclos do mesmo tipo na mesma empresa é recusada (em empresas diferentes é permitida); datas com início > fim são recusadas.
 - [ ] Ciclo encerrado continua listado e consultável.

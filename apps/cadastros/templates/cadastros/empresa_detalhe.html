@@ -59,5 +59,28 @@
     {% endif %}
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-ciclos">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-ciclos">Ciclos</h2>
+      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:ciclo_anual_novo' %}?empresa={{ empresa.pk }}">Novo ciclo anual</a>{% endif %}
+    </div>
+    {% if ciclos %}
+      <table class="tabela tabela--compacta">
+        <thead><tr><th scope="col">Ciclo</th><th scope="col">Período</th><th scope="col">Situação</th></tr></thead>
+        <tbody>
+          {% for ciclo in ciclos %}
+            <tr>
+              <td><a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">{{ ciclo.rotulo }}</a></td>
+              <td>{{ ciclo.periodo }}</td>
+              <td>{% include "cadastros/_ciclo_situacao.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="texto-suave">Nenhum ciclo ativo.</p>
+    {% endif %}
+  </section>
+
   {% include "core/_historico.html" %}
 {% endblock %}

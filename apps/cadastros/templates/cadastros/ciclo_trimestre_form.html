@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novo trimestre · {{ anual }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'cadastros:ciclo_lista' %}">Ciclos</a> ›
+    <a href="{% url 'cadastros:ciclo_detalhe' anual.pk %}">{{ anual }}</a>
+  </nav>
+  <h1>Novo trimestre <span class="texto-suave">· {{ anual }}</span></h1>
+  <p class="introducao">Período do ciclo anual: {{ anual.periodo }}.</p>
+
+  <section class="cartao">
+    <h2>Períodos padrão</h2>
+    <ul class="lista-simples">
+      {% for numero, rotulo, periodo in sugestoes %}
+        <li>{{ rotulo }}: {% if periodo %}{{ periodo.0|date:"d/m/Y" }} a {{ periodo.1|date:"d/m/Y" }}{% else %}<span class="texto-suave">informe as datas</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% url 'cadastros:ciclo_detalhe' anual.pk %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

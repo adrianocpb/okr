@@ -2,7 +2,7 @@
 
 Aplicação web para cadastro, acompanhamento e análise de OKRs (Objectives and Key Results) de múltiplas empresas de um grupo empresarial.
 
-> **Situação atual:** Etapa 3 (cadastro de empresas e pessoas). A aplicação roda localmente; ciclos, objetivos, KRs, check-ins e o painel serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+> **Situação atual:** Etapa 4 (empresas, pessoas e ciclos). A aplicação roda localmente; objetivos, KRs, check-ins e o painel serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
 
 ## Requisitos
 
@@ -115,7 +115,7 @@ Para desfazer uma restauração, restaure o arquivo `antes-restauracao-*.okrbak`
 config/            configuração do projeto (settings por ambiente, URLs)
 apps/core/         núcleo: serviços genéricos, acesso, erros, backup (banco/ isola o SQLite)
 apps/auditoria/    histórico de alterações estruturais (somente inserção)
-apps/cadastros/    empresas, pessoas e vínculos pessoa ↔ empresa
+apps/cadastros/    empresas, pessoas, vínculos pessoa ↔ empresa e ciclos (anuais e trimestrais)
 apps/contas/       modelo de usuário (login corporativo em etapa futura)
 templates/         layout base
 static/            CSS e bibliotecas servidas localmente

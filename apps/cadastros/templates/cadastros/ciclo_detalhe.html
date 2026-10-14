@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block titulo %}Ciclo {{ ciclo }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'cadastros:ciclo_lista' %}">Ciclos</a> ›
+    <a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa.sigla }}</a>
+    {% if ciclo.ciclo_anual %} › <a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual.rotulo }}</a>{% endif %}
+  </nav>
+
+  <div class="cabecalho-pagina">
+    <h1>Ciclo {{ ciclo.rotulo }} <span class="texto-suave">· {{ ciclo.empresa.sigla }}</span></h1>
+    <div class="acoes">
+      {% if not ciclo.arquivado %}
+        <a class="botao botao--primario" href="{% url 'cadastros:ciclo_editar' ciclo.pk %}">Editar</a>
+        <form method="post" action="{% url 'cadastros:ciclo_arquivar' ciclo.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ ciclo.versao }}">
+          <button type="submit" class="botao">Arquivar</button>
+        </form>
+      {% else %}
+        <form method="post" action="{% url 'cadastros:ciclo_reativar' ciclo.pk %}">
+          {% csrf_token %}
+          <input type="hidden" name="versao" value="{{ ciclo.versao }}">
+          <button type="submit" class="botao botao--primario">Reativar</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if ciclo.arquivado %}
+    <p class="aviso aviso--neutro">Ciclo arquivado em {{ ciclo.arquivado_em|date:"d/m/Y H:i" }}. Ele não recebe novos objetivos; os dados e o histórico continuam disponíveis.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Empresa</dt><dd><a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa }}</a></dd>
+      <dt>Tipo</dt><dd>{{ ciclo.get_tipo_display }}</dd>
+      <dt>Ano</dt><dd>{{ ciclo.ano }}</dd>
+      {% if ciclo.trimestre %}<dt>Trimestre</dt><dd>{{ ciclo.get_trimestre_display }}</dd>{% endif %}
+      {% if ciclo.ciclo_anual %}<dt>Ciclo anual</dt><dd><a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual.rotulo }} ({{ ciclo.ciclo_anual.periodo }})</a></dd>{% endif %}
+      <dt>Período</dt><dd>{{ ciclo.periodo }}</dd>
+      <dt>Situação</dt><dd>{% include "cadastros/_ciclo_situacao.html" %}</dd>
+    </dl>
+  </section>
+
+  {% if ciclo.tipo == "anual" %}
+    <section class="cartao" aria-labelledby="titulo-trimestres">
+      <div class="cabecalho-secao">
+        <h2 id="titulo-trimestres">Trimestres</h2>
+        {% if not ciclo.arquivado and faltam_trimestres %}
+          <div class="acoes">
+            {% if pode_gerar %}
+              <form method="post" action="{% url 'cadastros:ciclo_gerar_trimestres' ciclo.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="botao botao--primario">Gerar trimestres que faltam</button>
+              </form>
+            {% endif %}
+            <a class="botao" href="{% url 'cadastros:ciclo_trimestre_novo' ciclo.pk %}">Novo trimestre</a>
+          </div>
+        {% endif %}
+      </div>
+      {% if trimestres %}
+        <table class="tabela tabela--compacta">
+          <thead><tr><th scope="col">Trimestre</th><th scope="col">Período</th><th scope="col">Situação</th></tr></thead>
+          <tbody>
+            {% for trimestre in trimestres %}
+              {% with ciclo=trimestre %}
+                <tr>
+                  <td><a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">{{ ciclo.get_trimestre_display }}</a></td>
+                  <td>{{ ciclo.periodo }}</td>
+                  <td>{% include "cadastros/_ciclo_situacao.html" %}</td>
+                </tr>
+              {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="texto-suave">Nenhum trimestre cadastrado.
+          {% if pode_gerar %}Use "Gerar trimestres que faltam" para criar os quatro trimestres de uma vez.{% endif %}
+        </p>
+      {% endif %}
+      {% if not ciclo.arquivado and faltam_trimestres and not pode_gerar %}
+        <p class="texto-suave">Como este ciclo não começa no dia 1 ou não dura exatamente 12 meses, os trimestres precisam ser cadastrados individualmente, com as datas informadas.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% include "core/_historico.html" %}
+{% endblock %}

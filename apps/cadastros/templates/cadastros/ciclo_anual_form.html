@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novo ciclo anual{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'cadastros:ciclo_lista' %}">Ciclos</a></nav>
+  <h1>Novo ciclo anual</h1>
+
+  {% if not form.fields.empresa.queryset.exists %}
+    <p class="aviso aviso--neutro">Não há empresas ativas. <a href="{% url 'cadastros:empresa_nova' %}">Cadastre uma empresa</a> antes de criar ciclos.</p>
+  {% endif %}
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% url 'cadastros:ciclo_lista' %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

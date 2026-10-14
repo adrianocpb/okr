@@ -1,0 +1,5 @@
+{# Selo de situação de um ciclo. Espera `ciclo`. #}
+{% if ciclo.arquivado %}<span class="selo selo--neutro">Arquivado</span>
+{% elif ciclo.situacao == "em_andamento" %}<span class="selo selo--ok">Em andamento</span>
+{% elif ciclo.situacao == "planejado" %}<span class="selo selo--info">Planejado</span>
+{% else %}<span class="selo selo--neutro">Encerrado</span>{% endif %}

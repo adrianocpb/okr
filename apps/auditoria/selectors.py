@@ -59,15 +59,55 @@ def _texto(valor) -> str:
     return str(valor)
 
 
+def _choices(modelo: type[models.Model], campo: str) -> dict:
+    try:
+        return dict(modelo._meta.get_field(campo).flatchoices)
+    except FieldDoesNotExist, AttributeError:
+        return {}
+
+
+def _relacionado(modelo: type[models.Model], campo: str):
+    """Modelo apontado pelo campo, se ele for uma chave estrangeira."""
+    try:
+        definicao = modelo._meta.get_field(campo)
+    except FieldDoesNotExist:
+        return None
+    return definicao.related_model if definicao.many_to_one else None
+
+
+class _Tradutor:
+    """Converte valores gravados na auditoria em texto, resolvendo referências e opções."""
+
+    def __init__(self, modelo: type[models.Model]):
+        self.modelo = modelo
+        self.cache: dict = {}
+
+    def __call__(self, campo: str, valor) -> str:
+        if valor is None or valor == "":
+            return "—"
+        opcoes = _choices(self.modelo, campo)
+        if valor in opcoes:
+            return str(opcoes[valor])
+        relacionado = _relacionado(self.modelo, campo)
+        if relacionado is not None and isinstance(valor, int):
+            chave = (relacionado, valor)
+            if chave not in self.cache:
+                registro = relacionado._default_manager.filter(pk=valor).first()
+                self.cache[chave] = str(registro) if registro else f"registro nº {valor}"
+            return self.cache[chave]
+        return _texto(valor)
+
+
 def historico_legivel(objeto: models.Model) -> list[EntradaHistorico]:
     modelo = type(objeto)
+    traduzir = _Tradutor(modelo)
     entradas = []
     for registro in historico_do_objeto(objeto).select_related("usuario"):
         mudancas = [
             Mudanca(
                 campo=_rotulo(modelo, campo),
-                antes=_texto(valores.get("antes")),
-                depois=_texto(valores.get("depois")),
+                antes=traduzir(campo, valores.get("antes")),
+                depois=traduzir(campo, valores.get("depois")),
             )
             for campo, valores in registro.alteracoes.items()
         ]

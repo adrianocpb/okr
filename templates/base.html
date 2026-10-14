@@ -16,6 +16,7 @@
       <a href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>Início</a>
       <a href="{% url 'cadastros:empresa_lista' %}"{% if '/empresas/' in request.path %} aria-current="page"{% endif %}>Empresas</a>
       <a href="{% url 'cadastros:pessoa_lista' %}"{% if '/pessoas/' in request.path %} aria-current="page"{% endif %}>Pessoas</a>
+      <a href="{% url 'cadastros:ciclo_lista' %}"{% if '/ciclos/' in request.path %} aria-current="page"{% endif %}>Ciclos</a>
     </nav>
   </header>
 

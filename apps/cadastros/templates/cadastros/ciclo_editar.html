@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block titulo %}Editar ciclo {{ ciclo }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'cadastros:ciclo_lista' %}">Ciclos</a> ›
+    <a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">{{ ciclo }}</a>
+  </nav>
+  <h1>Editar ciclo {{ ciclo.rotulo }} <span class="texto-suave">· {{ ciclo.empresa.sigla }}</span></h1>
+  <p class="introducao">Empresa e tipo não podem ser alterados.{% if ciclo.ciclo_anual %} Ciclo anual: {{ ciclo.ciclo_anual.rotulo }} ({{ ciclo.ciclo_anual.periodo }}).{% endif %}</p>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

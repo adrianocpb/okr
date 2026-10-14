@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block titulo %}Ciclos{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Ciclos</h1>
+    <a class="botao botao--primario" href="{% url 'cadastros:ciclo_anual_novo' %}">Novo ciclo anual</a>
+  </div>
+  <p class="introducao">Cada empresa tem seus próprios ciclos. Os trimestres são criados a partir do ciclo anual correspondente.</p>
+
+  <form method="get" class="filtros" role="search" aria-label="Filtrar ciclos">
+    <label>Empresa
+      <select name="empresa">
+        <option value="">Todas</option>
+        {% for empresa in empresas %}
+          <option value="{{ empresa.pk }}"{% if empresa.pk == empresa_id %} selected{% endif %}>{{ empresa.sigla }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Ano
+      <select name="ano">
+        <option value="">Todos</option>
+        {% for valor in anos %}<option value="{{ valor }}"{% if valor == ano %} selected{% endif %}>{{ valor }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Tipo
+      <select name="tipo">
+        <option value="">Todos</option>
+        {% for valor, rotulo in tipos %}<option value="{{ valor }}"{% if valor == filtros.tipo %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Situação
+      <select name="situacao">
+        {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == filtros.situacao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label class="filtros__marcacao">
+      <span><input type="checkbox" name="arquivados" value="1"{% if filtros.arquivados == "1" %} checked{% endif %}> Mostrar arquivados</span>
+    </label>
+    <button type="submit" class="botao">Filtrar</button>
+    {% if filtrado %}<a href="{% url 'cadastros:ciclo_lista' %}">Limpar filtros</a>{% endif %}
+  </form>
+
+  {% if pagina.object_list %}
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th scope="col">Empresa</th>
+          <th scope="col">Ciclo</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Período</th>
+          <th scope="col">Situação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ciclo in pagina.object_list %}
+          <tr>
+            <td>{{ ciclo.empresa.sigla }}</td>
+            <td><a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}"><strong>{{ ciclo.rotulo }}</strong></a></td>
+            <td>{{ ciclo.get_tipo_display }}</td>
+            <td>{{ ciclo.periodo }}</td>
+            <td>{% include "cadastros/_ciclo_situacao.html" %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "core/_paginacao.html" %}
+  {% else %}
+    <p class="vazio">
+      {% if filtrado %}Nenhum ciclo encontrado com esses filtros.
+      {% else %}Nenhum ciclo cadastrado ainda. <a href="{% url 'cadastros:ciclo_anual_novo' %}">Cadastre o primeiro ciclo anual</a>.{% endif %}
+    </p>
+  {% endif %}
+{% endblock %}

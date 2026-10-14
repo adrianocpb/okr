@@ -79,6 +79,7 @@ def empresa_detalhe(request, pk):
         {
             "empresa": empresa,
             "pessoas": selectors.pessoas_da_empresa(escopo, empresa),
+            "ciclos": selectors.ciclos_da_empresa(escopo, empresa),
             "historico": historico_legivel(empresa),
         },
     )

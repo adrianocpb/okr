@@ -81,9 +81,9 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 
 | ID | Requisito |
 |---|---|
-| RF-11 | **Cada empresa tem seus próprios ciclos** [Decidido em Q-03]. Cadastrar, por empresa, ciclo **anual** (ano de referência, data de início, data de fim) e **trimestral** (ano, trimestre 1–4, datas). As datas são livres, o que permite ano fiscal diferente do ano civil. |
+| RF-11 | **Cada empresa tem seus próprios ciclos** [Decidido em Q-03]. Cadastrar, por empresa, ciclo **anual** (ano de referência, data de início, data de fim) e **trimestral** (ano, trimestre 1–4, datas). As datas são livres, o que permite ano fiscal diferente do ano civil. Sem datas informadas, o ciclo anual assume o ano civil (01/01 a 31/12) e o trimestre assume o bloco de 3 meses correspondente a partir do início do ano. Ação de apoio: gerar de uma vez os trimestres que faltam (quando o ano começa no dia 1 e dura 12 meses). |
 | RF-12 | Um ciclo trimestral é associado a um ciclo anual **da mesma empresa** que o contém; suas datas devem estar dentro das datas do anual. |
-| RF-13 | Situação do ciclo: *Planejado*, *Em andamento*, *Encerrado*. Ciclos encerrados permanecem consultáveis; novos check-ins em ciclo encerrado são permitidos com confirmação explícita e data de referência dentro do ciclo [Decidido em Q-11]. |
+| RF-13 | Situação do ciclo: *Planejado*, *Em andamento*, *Encerrado*, **calculada pelas datas** em relação ao dia atual [Decisão de implementação na E4: evita situação manual desatualizada]. Ciclos podem ser arquivados (um ciclo anual só depois de seus trimestres); empresa, tipo e ciclo anual não mudam após a criação, e o ano de um ciclo com trimestres não pode ser alterado. Ciclos encerrados permanecem consultáveis; novos check-ins em ciclo encerrado são permitidos com confirmação explícita e data de referência dentro do ciclo [Decidido em Q-11]. |
 | RF-14 | Não é permitido haver, **na mesma empresa**, dois ciclos do mesmo tipo com períodos sobrepostos. Empresas diferentes podem ter ciclos com datas diferentes. |
 | RF-15 | Consultar ciclos anteriores com seus OKRs e históricos. |
 

@@ -1,6 +1,6 @@
 from django.urls import path
 
-from apps.cadastros import views
+from apps.cadastros import views, views_ciclos
 
 app_name = "cadastros"
 
@@ -17,4 +17,20 @@ urlpatterns = [
     path("pessoas/<int:pk>/editar/", views.pessoa_editar, name="pessoa_editar"),
     path("pessoas/<int:pk>/arquivar/", views.pessoa_arquivar, name="pessoa_arquivar"),
     path("pessoas/<int:pk>/reativar/", views.pessoa_reativar, name="pessoa_reativar"),
+    path("ciclos/", views_ciclos.ciclo_lista, name="ciclo_lista"),
+    path("ciclos/novo/", views_ciclos.ciclo_anual_novo, name="ciclo_anual_novo"),
+    path("ciclos/<int:pk>/", views_ciclos.ciclo_detalhe, name="ciclo_detalhe"),
+    path("ciclos/<int:pk>/editar/", views_ciclos.ciclo_editar, name="ciclo_editar"),
+    path("ciclos/<int:pk>/arquivar/", views_ciclos.ciclo_arquivar, name="ciclo_arquivar"),
+    path("ciclos/<int:pk>/reativar/", views_ciclos.ciclo_reativar, name="ciclo_reativar"),
+    path(
+        "ciclos/<int:pk>/trimestres/novo/",
+        views_ciclos.ciclo_trimestre_novo,
+        name="ciclo_trimestre_novo",
+    ),
+    path(
+        "ciclos/<int:pk>/trimestres/gerar/",
+        views_ciclos.ciclo_gerar_trimestres,
+        name="ciclo_gerar_trimestres",
+    ),
 ]

@@ -233,3 +233,6 @@ input[type="text"], input[type="search"], input[type="email"], input[type="numbe
   .tabela td { border: 0; padding: 2px 10px; }
   .tabela .numero { text-align: left; }
 }
+
+.selo--info { color: #1f4e79; background: #dceaf7; }
+.filtros__marcacao span { display: flex; gap: 6px; align-items: center; color: var(--cor-texto); font-size: 0.95rem; padding-bottom: 6px; }
