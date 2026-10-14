@@ -1,12 +1,16 @@
 """Consultas de objetivos, sempre limitadas pelo escopo de acesso."""
 
+from dataclasses import dataclass
+
 from django.db.models import Q, QuerySet
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.acesso import EscopoAcesso
 from apps.core.erros import AcessoNegado
 from apps.core.texto import chave_busca
-from apps.okrs.models import Objetivo, VinculoObjetivo
+from apps.okrs.dominio.cor import cor_do_progresso
+from apps.okrs.dominio.progresso import Progresso
+from apps.okrs.models import Objetivo, ResultadoChave, VinculoObjetivo
 
 STATUS_FILTRO = {"": "Todos", **dict(Objetivo.Status.choices)}
 
@@ -95,4 +99,54 @@ def responsabilidades_da_pessoa(escopo: EscopoAcesso, pessoa: Pessoa) -> dict:
     return {
         "owner": objetivos.filter(owner=pessoa),
         "sponsor": objetivos.filter(sponsor=pessoa),
+        "krs": _krs_visiveis(escopo)
+        .filter(responsavel=pessoa)
+        .order_by("-objetivo__ciclo__ano", "chave_titulo"),
     }
+
+
+# --------------------------------------------------------------------- KRs
+
+
+@dataclass(frozen=True)
+class SituacaoProgresso:
+    """O que a tela mostra sobre o progresso de um KR."""
+
+    progresso: Progresso | None
+    cor: str
+    texto: str
+
+
+def _krs_visiveis(escopo: EscopoAcesso) -> QuerySet:
+    return escopo.filtrar(
+        ResultadoChave.objects.select_related(
+            "objetivo__empresa", "objetivo__ciclo", "responsavel"
+        ),
+        "objetivo__empresa_id",
+    )
+
+
+def obter_kr(escopo: EscopoAcesso, kr_id: int) -> ResultadoChave:
+    try:
+        return _krs_visiveis(escopo).get(pk=kr_id)
+    except ResultadoChave.DoesNotExist as exc:
+        raise AcessoNegado() from exc
+
+
+def krs_do_objetivo(objetivo: Objetivo) -> list[ResultadoChave]:
+    """KRs do objetivo, cada um com sua situação de progresso em `kr.situacao`.
+
+    Cada KR é exibido individualmente; não há soma nem média entre KRs (Q-09).
+    """
+    krs = list(objetivo.krs.select_related("responsavel").prefetch_related("marcos").order_by("id"))
+    for kr in krs:
+        kr.situacao = situacao_do_kr(kr)
+    return krs
+
+
+def situacao_do_kr(kr: ResultadoChave) -> SituacaoProgresso:
+    """Progresso atual do KR. Sem check-in registrado, é exibido em cinza.
+
+    Os check-ins (E7) fornecerão o valor medido; até lá, todo KR está sem check-in.
+    """
+    return SituacaoProgresso(progresso=None, cor=cor_do_progresso(None), texto="Sem check-in")

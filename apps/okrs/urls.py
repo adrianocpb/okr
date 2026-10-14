@@ -15,4 +15,13 @@ urlpatterns = [
         views.objetivo_desvincular,
         name="objetivo_desvincular",
     ),
+    path("objetivos/<int:objetivo_pk>/krs/novo/", views.kr_novo, name="kr_novo"),
+    path("krs/<int:pk>/", views.kr_detalhe, name="kr_detalhe"),
+    path("krs/<int:pk>/editar/", views.kr_editar, name="kr_editar"),
+    path("krs/<int:pk>/marcos/", views.marco_adicionar, name="marco_adicionar"),
+    path(
+        "krs/<int:pk>/marcos/<int:marco_pk>/remover/",
+        views.marco_remover,
+        name="marco_remover",
+    ),
 ]

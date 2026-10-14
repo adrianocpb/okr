@@ -1,0 +1,4 @@
+{# Selo de status do KR. Espera `kr`. #}
+{% if kr.status == "ativo" %}<span class="selo selo--ok">Ativo</span>
+{% elif kr.status == "concluido" %}<span class="selo selo--neutro">Concluído</span>
+{% else %}<span class="selo selo--erro">Cancelado</span>{% endif %}

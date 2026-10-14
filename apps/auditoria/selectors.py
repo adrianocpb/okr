@@ -3,6 +3,7 @@
 import re
 from dataclasses import dataclass
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
@@ -99,7 +100,26 @@ class _Tradutor:
                 registro = relacionado._default_manager.filter(pk=valor).first()
                 self.cache[chave] = str(registro) if registro else f"registro nº {valor}"
             return self.cache[chave]
+        if _eh_decimal(self.modelo, campo) and isinstance(valor, str):
+            return _decimal_legivel(valor)
         return _texto(valor)
+
+
+def _eh_decimal(modelo: type[models.Model], campo: str) -> bool:
+    try:
+        return isinstance(modelo._meta.get_field(campo), models.DecimalField)
+    except FieldDoesNotExist:
+        return False
+
+
+def _decimal_legivel(valor: str) -> str:
+    """'150.0000' → '150'; '1234.5000' → '1.234,5' (sem zeros desnecessários, em pt-BR)."""
+    try:
+        numero = Decimal(valor).normalize()
+    except InvalidOperation:
+        return valor
+    casas = max(-numero.as_tuple().exponent, 0)
+    return formats.number_format(numero, casas, use_l10n=True, force_grouping=True)
 
 
 def historico_legivel(objeto: models.Model) -> list[EntradaHistorico]:

@@ -1,9 +1,23 @@
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.models import ModeloBase
 from apps.core.texto import chave_busca, espacos_simples
+from apps.okrs.dominio import progresso as dominio
+
+
+def problema_do_responsavel(pessoa: Pessoa, empresa_id: int | None) -> str | None:
+    """Regra para atribuir responsabilidade (Q-02b): pessoa ativa e vinculada à empresa.
+
+    Vale no momento da atribuição; uma atribuição existente não é invalidada depois.
+    """
+    if pessoa.arquivado:
+        return "Pessoa arquivada não pode receber novas responsabilidades."
+    if empresa_id and not pessoa.vinculos.filter(empresa_id=empresa_id).exists():
+        return "A pessoa precisa estar vinculada à empresa do objetivo."
+    return None
 
 
 class Objetivo(ModeloBase):
@@ -102,13 +116,9 @@ class Objetivo(ModeloBase):
             pessoa_id = getattr(self, f"{campo}_id")
             if not pessoa_id or pessoa_id == anterior.get(f"{campo}_id"):
                 continue
-            pessoa = getattr(self, campo)
-            if pessoa.arquivado:
-                erros[campo] = "Pessoa arquivada não pode receber novas responsabilidades."
-            elif (
-                self.empresa_id and not pessoa.vinculos.filter(empresa_id=self.empresa_id).exists()
-            ):
-                erros[campo] = "A pessoa precisa estar vinculada à empresa do objetivo."
+            problema = problema_do_responsavel(getattr(self, campo), self.empresa_id)
+            if problema:
+                erros[campo] = problema
 
         if self.status in self.STATUS_QUE_EXIGEM_COMENTARIO and not self.comentario_status:
             erros["comentario_status"] = "Informe um comentário ao concluir ou cancelar o objetivo."
@@ -167,3 +177,169 @@ class VinculoObjetivo(models.Model):
             .exists()
         ):
             raise ValidationError("Estes objetivos já estão vinculados.")
+
+
+def _campo_valor(rotulo: str) -> models.DecimalField:
+    return models.DecimalField(rotulo, max_digits=18, decimal_places=4, null=True, blank=True)
+
+
+class ResultadoChave(ModeloBase):
+    """Resultado-chave (KR): medida verificável de um objetivo.
+
+    Tem um único responsável principal e **não** possui Owner nem Sponsor.
+    O valor atual não é digitado aqui: virá dos check-ins (E7).
+    """
+
+    class TipoMedicao(models.TextChoices):
+        NUMERICO = dominio.TipoMedicao.NUMERICO, "Numérico (valor absoluto ou percentual)"
+        MANUTENCAO = dominio.TipoMedicao.MANUTENCAO, "Manutenção (manter em um patamar)"
+        BINARIO = dominio.TipoMedicao.BINARIO, "Binário (sim/não)"
+        MARCOS = dominio.TipoMedicao.MARCOS, "Marcos (etapas de conclusão)"
+
+    class Regra(models.TextChoices):
+        CRESCENTE = dominio.Regra.CRESCENTE, "Crescente (maior é melhor)"
+        DECRESCENTE = dominio.Regra.DECRESCENTE, "Decrescente (menor é melhor)"
+        MANTER_ACIMA = dominio.Regra.MANTER_ACIMA, "Manter igual ou acima do mínimo"
+        MANTER_ABAIXO = dominio.Regra.MANTER_ABAIXO, "Manter igual ou abaixo do máximo"
+        MANTER_ENTRE = dominio.Regra.MANTER_ENTRE, "Manter entre mínimo e máximo"
+
+    class Status(models.TextChoices):
+        ATIVO = "ativo", "Ativo"
+        CONCLUIDO = "concluido", "Concluído"
+        CANCELADO = "cancelado", "Cancelado"
+
+    FREQUENCIA_PADRAO_DIAS = 14  # quinzenal
+
+    objetivo = models.ForeignKey(
+        Objetivo, on_delete=models.PROTECT, related_name="krs", verbose_name="objetivo"
+    )
+    titulo = models.CharField("título", max_length=200)
+    descricao = models.TextField("descrição", blank=True)
+    responsavel = models.ForeignKey(
+        Pessoa,
+        on_delete=models.PROTECT,
+        related_name="krs_como_responsavel",
+        verbose_name="responsável",
+    )
+    tipo_medicao = models.CharField("tipo de medição", max_length=12, choices=TipoMedicao.choices)
+    regra = models.CharField("regra de evolução", max_length=15, choices=Regra.choices, blank=True)
+    unidade = models.CharField("unidade", max_length=30, blank=True)
+    casas_decimais = models.PositiveSmallIntegerField(
+        "casas decimais", default=0, validators=[MaxValueValidator(4)]
+    )
+    valor_inicial = _campo_valor("valor inicial")
+    meta = _campo_valor("meta")
+    limite_inferior = _campo_valor("limite mínimo")
+    limite_superior = _campo_valor("limite máximo")
+    frequencia_checkin_dias = models.PositiveSmallIntegerField(
+        "frequência de check-in (dias)",
+        default=FREQUENCIA_PADRAO_DIAS,
+        validators=[MinValueValidator(1), MaxValueValidator(365)],
+    )
+    status = models.CharField("status", max_length=12, choices=Status.choices, default=Status.ATIVO)
+    chave_titulo = models.CharField(max_length=200, editable=False, db_index=True)
+
+    campos_nao_auditados = frozenset({"chave_titulo"})
+
+    # Campos usados por cada tipo; os demais são limpos ao salvar.
+    CAMPOS_POR_TIPO = {
+        TipoMedicao.NUMERICO: {"regra", "unidade", "valor_inicial", "meta"},
+        TipoMedicao.MANUTENCAO: {"regra", "unidade", "limite_inferior", "limite_superior"},
+        TipoMedicao.BINARIO: set(),
+        TipoMedicao.MARCOS: set(),
+    }
+
+    class Meta:
+        verbose_name = "resultado-chave"
+        verbose_name_plural = "resultados-chave"
+        ordering = ["objetivo_id", "id"]
+
+    def __str__(self):
+        return self.titulo
+
+    @property
+    def empresa_para_auditoria(self) -> int | None:
+        return self.objetivo.empresa_id if self.objetivo_id else None
+
+    def medicao(self) -> dominio.Medicao:
+        return dominio.Medicao(
+            tipo=dominio.TipoMedicao(self.tipo_medicao),
+            regra=dominio.Regra(self.regra) if self.regra else None,
+            valor_inicial=self.valor_inicial,
+            meta=self.meta,
+            limite_inferior=self.limite_inferior,
+            limite_superior=self.limite_superior,
+        )
+
+    def _limpar_campos_nao_usados(self) -> None:
+        usados = self.CAMPOS_POR_TIPO.get(self.tipo_medicao, set())
+        if "regra" not in usados:
+            self.regra = ""
+        if "unidade" not in usados:
+            self.unidade = ""
+        for campo in ("valor_inicial", "meta", "limite_inferior", "limite_superior"):
+            if campo not in usados:
+                setattr(self, campo, None)
+        # Limites que a regra de manutenção não usa também são descartados.
+        if self.regra == self.Regra.MANTER_ACIMA:
+            self.limite_superior = None
+        if self.regra == self.Regra.MANTER_ABAIXO:
+            self.limite_inferior = None
+
+    def clean(self):
+        self.titulo = espacos_simples(self.titulo)
+        self.descricao = (self.descricao or "").strip()
+        self.unidade = espacos_simples(self.unidade)
+        self.chave_titulo = chave_busca(self.titulo)
+        if self.tipo_medicao in self.CAMPOS_POR_TIPO:
+            self._limpar_campos_nao_usados()
+
+        erros = {}
+        anterior = (
+            ResultadoChave.objects.filter(pk=self.pk).values("responsavel_id").first()
+            if self.pk
+            else None
+        ) or {}
+        if self.responsavel_id and self.responsavel_id != anterior.get("responsavel_id"):
+            problema = problema_do_responsavel(
+                self.responsavel, self.objetivo.empresa_id if self.objetivo_id else None
+            )
+            if problema:
+                erros["responsavel"] = problema
+
+        if self.tipo_medicao in self.CAMPOS_POR_TIPO:
+            try:
+                dominio.validar(self.medicao())
+            except dominio.ErroDeMedicao as exc:
+                erros[self._campo_do_erro(str(exc))] = str(exc)
+        if erros:
+            raise ValidationError(erros)
+
+    def _campo_do_erro(self, mensagem: str) -> str:
+        """Associa a mensagem de validação da medição ao campo mais adequado do formulário."""
+        if "regra" in mensagem:
+            return "regra"
+        if "limite máximo" in mensagem and "mínimo deve" not in mensagem:
+            return "limite_superior"
+        if "limite" in mensagem:
+            return "limite_inferior"
+        return "meta"
+
+
+class Marco(models.Model):
+    """Etapa de um KR do tipo Marcos. Todos os marcos têm o mesmo peso (Q-10)."""
+
+    kr = models.ForeignKey(
+        ResultadoChave, on_delete=models.PROTECT, related_name="marcos", verbose_name="KR"
+    )
+    descricao = models.CharField("descrição", max_length=200)
+    ordem = models.PositiveSmallIntegerField("ordem")
+    prazo = models.DateField("prazo", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "marco"
+        verbose_name_plural = "marcos"
+        ordering = ["kr_id", "ordem", "id"]
+
+    def __str__(self):
+        return f"{self.ordem}. {self.descricao}"

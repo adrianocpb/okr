@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load okrs_formato %}
 
 {% block titulo %}{{ objetivo.titulo|truncatechars:60 }}{% endblock %}
 
@@ -36,6 +37,32 @@
     {% if objetivo.descricao %}
       <h3>Descrição</h3>
       <p>{{ objetivo.descricao|linebreaksbr }}</p>
+    {% endif %}
+  </section>
+
+  <section class="cartao" aria-labelledby="titulo-krs">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-krs">Resultados-chave (KRs)</h2>
+      {% if not objetivo.encerrado %}<a class="botao botao--primario" href="{% url 'okrs:kr_novo' objetivo.pk %}">Novo KR</a>{% endif %}
+    </div>
+    {% if krs %}
+      <p class="texto-suave">Cada KR tem sua própria medida e seu próprio progresso; os percentuais não são somados entre KRs.</p>
+      <table class="tabela tabela--krs">
+        <thead><tr><th scope="col">KR</th><th scope="col">Responsável</th><th scope="col">Medição</th><th scope="col">Progresso</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          {% for kr in krs %}
+            <tr>
+              <td><a href="{% url 'okrs:kr_detalhe' kr.pk %}"><strong>{{ kr.titulo }}</strong></a></td>
+              <td>{{ kr.responsavel.nome }}</td>
+              <td>{{ kr|resumo_medicao }}</td>
+              <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
+              <td>{% include "okrs/_kr_status.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="texto-suave">Nenhum KR cadastrado.{% if not objetivo.encerrado %} Os KRs definem como o alcance do objetivo será medido.{% endif %}</p>
     {% endif %}
   </section>
 

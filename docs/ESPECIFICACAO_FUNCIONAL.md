@@ -109,7 +109,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 | RF-26 | Status do KR (ciclo de vida, manual): *Ativo*, *Concluído*, *Cancelado*. A **situação de acompanhamento** vem do último check-in (ver 7.3). |
 | RF-27 | Frequência de check-in por KR, com padrão **quinzenal (14 dias)** e opções semanal (7), mensal (30) ou personalizada (em dias). |
 | RF-28 | Alterações de meta, linha de base, responsável, unidade ou frequência são registradas na auditoria com valores anterior e novo. |
-| RF-29 | Não é permitido mudar o tipo de medição de um KR que já tenha check-ins. É preciso cancelar o KR e criar outro, preservando o histórico. [Decisão proposta] |
+| RF-29 | Campos que o tipo de medição não usa são descartados ao salvar (por exemplo, limites em um KR numérico). Marcos podem ser adicionados e removidos, com registro no histórico do KR. Não é permitido mudar o tipo de medição de um KR que já tenha check-ins. É preciso cancelar o KR e criar outro, preservando o histórico. [Decisão proposta] |
 | RF-30 | KRs **não** têm vínculo direto entre ciclos; a relação anual ↔ trimestral existe apenas entre objetivos. [Decidido em Q-07] |
 
 ### 3.6. Iniciativas
@@ -311,7 +311,7 @@ Cada KR exibe uma cor que **migra do vermelho ao verde** à medida que o valor s
 | 50% | Laranja/amarelo |
 | 90% ou mais (inclusive acima de 100%) | Verde |
 
-- Entre esses pontos, a cor é **interpolada de forma contínua** (por exemplo, 10% fica vermelho e 70% fica entre amarelo e verde). Exemplo do solicitante: meta 100, valor 10 em vermelho, 50 em laranja/amarelo e de 90 a 100 em verde. [Pontos de referência derivados desse exemplo; ajustáveis em configuração; ver Q-22]
+- Entre esses pontos, a cor é **interpolada de forma contínua** (por exemplo, 10% fica vermelho e 70% fica entre amarelo e verde). Exemplo do solicitante: meta 100, valor 10 em vermelho, 50 em laranja/amarelo e de 90 a 100 em verde. [Decidido em Q-22]
 - **NUMÉRICO e MARCOS:** usam a escala acima.
 - **BINÁRIO:** vermelho enquanto não concluído; verde quando concluído.
 - **MANUTENÇÃO:** verde se dentro do limite; vermelho se fora.
@@ -423,11 +423,11 @@ Ocultar botões ou menus **não** é considerado controle de acesso.
 | Q-19 | Hospedagem futura? | Provável teste com Supabase (PostgreSQL); decisão futura. |
 | Q-20 | Filtro de período com várias empresas? | Por intervalo de datas, mostrando os ciclos que se sobrepõem a ele. |
 | Q-21 | KRs de uma iniciativa podem ser de outros objetivos? | Não; do mesmo objetivo. |
+| Q-22 | Pontos da escala de cores do progresso? | 0% vermelho, 50% laranja/amarelo, 90% ou mais verde, com transição contínua (confirmado em 14/10/2026). |
 
 ### 11.2. Pendentes (não bloqueiam as próximas etapas)
 
 | ID | Dúvida | Proposta atual | Necessária antes de |
 |---|---|---|---|
-| Q-22 | Os pontos de referência da escala de cores (0% vermelho, 50% laranja/amarelo, 90% verde) atendem? | Sim, ajustáveis em configuração. | E6 |
 | Q-13b | O que o perfil **Usuário** pode fazer? Criar objetivos e KRs e alterar metas, ou apenas registrar check-ins e atualizações? | Registrar check-ins e atualizações de iniciativas e consultar, nas empresas autorizadas; cadastros estruturais e metas ficam com o Administrador. | E13 |
 | Q-14b | Qual provedor corporativo (Microsoft Entra ID ou Google Workspace)? Haverá conta administrativa local de contingência? | Decidir antes da E13. | E13 |

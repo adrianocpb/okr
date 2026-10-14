@@ -11,7 +11,7 @@ from apps.core.views_apoio import executar as _executar
 from apps.core.views_apoio import filtros as _filtros
 from apps.core.views_apoio import pagina as _pagina
 from apps.okrs import selectors, services
-from apps.okrs.forms import ObjetivoForm, VinculoForm
+from apps.okrs.forms import KRForm, MarcoForm, ObjetivoForm, VinculoForm
 
 
 def _inteiro(valor: str) -> int | None:
@@ -57,6 +57,7 @@ def objetivo_detalhe(request, pk):
             "objetivo": objetivo,
             "vinculos": selectors.vinculos_do_objetivo(objetivo),
             "form_vinculo": VinculoForm(objetivo=objetivo),
+            "krs": selectors.krs_do_objetivo(objetivo),
             "historico": historico_legivel(objetivo),
         },
     )
@@ -167,3 +168,109 @@ def objetivo_desvincular(request, pk, vinculo_pk):
     else:
         messages.success(request, "Vínculo removido. O registro permanece no histórico.")
     return redirect("okrs:objetivo_detalhe", pk=pk)
+
+
+# --------------------------------------------------------------------- KRs
+
+
+def kr_novo(request, objetivo_pk):
+    escopo = escopo_da_requisicao(request)
+    objetivo = selectors.obter_objetivo(escopo, objetivo_pk)
+    if objetivo.encerrado:
+        raise ErroDeNegocio("Objetivo concluído ou cancelado não recebe novos KRs.")
+    form = KRForm(request.POST or None, objetivo=objetivo)
+    if request.method == "POST" and form.is_valid():
+        kr = _executar(
+            form,
+            lambda: services.criar_kr(
+                objetivo_id=objetivo.pk,
+                dados=form.dados(),
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+            ),
+        )
+        if kr:
+            messages.success(request, "KR cadastrado.")
+            return redirect("okrs:kr_detalhe", pk=kr.pk)
+    return render(
+        request,
+        "okrs/kr_form.html",
+        {"form": form, "objetivo": objetivo, "kr": None},
+    )
+
+
+def kr_detalhe(request, pk):
+    kr = selectors.obter_kr(escopo_da_requisicao(request), pk)
+    return render(
+        request,
+        "okrs/kr_detalhe.html",
+        {
+            "kr": kr,
+            "objetivo": kr.objetivo,
+            "situacao": selectors.situacao_do_kr(kr),
+            "marcos": kr.marcos.all(),
+            "form_marco": MarcoForm(),
+            "historico": historico_legivel(kr),
+        },
+    )
+
+
+def kr_editar(request, pk):
+    escopo = escopo_da_requisicao(request)
+    kr = selectors.obter_kr(escopo, pk)
+    form = KRForm(request.POST or None, objetivo=kr.objetivo, kr=kr)
+    if request.method == "POST" and form.is_valid():
+        atualizado = _executar(
+            form,
+            lambda: services.atualizar_kr(
+                pk,
+                dados=form.dados(),
+                versao=form.cleaned_data["versao"] or 0,
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+            ),
+        )
+        if atualizado:
+            messages.success(request, "KR atualizado.")
+            return redirect("okrs:kr_detalhe", pk=pk)
+    return render(
+        request,
+        "okrs/kr_form.html",
+        {"form": form, "objetivo": kr.objetivo, "kr": kr},
+    )
+
+
+@require_POST
+def marco_adicionar(request, pk):
+    form = MarcoForm(request.POST)
+    if not form.is_valid():
+        messages.error(request, "Informe a descrição do marco.")
+        return redirect("okrs:kr_detalhe", pk=pk)
+    try:
+        services.adicionar_marco(
+            pk,
+            descricao=form.cleaned_data["descricao"],
+            prazo=form.cleaned_data["prazo"],
+            ator=ator_da_requisicao(request),
+            escopo=escopo_da_requisicao(request),
+        )
+    except ValidationError as erro:
+        messages.error(request, " ".join(erro.messages))
+    except ErroDeNegocio as erro:
+        messages.error(request, erro.mensagem)
+    else:
+        messages.success(request, "Marco adicionado.")
+    return redirect("okrs:kr_detalhe", pk=pk)
+
+
+@require_POST
+def marco_remover(request, pk, marco_pk):
+    try:
+        services.remover_marco(
+            marco_pk, ator=ator_da_requisicao(request), escopo=escopo_da_requisicao(request)
+        )
+    except ErroDeNegocio as erro:
+        messages.error(request, erro.mensagem)
+    else:
+        messages.success(request, "Marco removido. O registro permanece no histórico do KR.")
+    return redirect("okrs:kr_detalhe", pk=pk)

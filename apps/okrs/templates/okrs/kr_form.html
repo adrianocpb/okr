@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block titulo %}{% if kr %}Editar KR{% else %}Novo KR{% endif %}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+    {% if kr %} › <a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo|truncatechars:60 }}</a>{% endif %}
+  </nav>
+  <h1>{% if kr %}Editar KR{% else %}Novo KR{% endif %}</h1>
+  <p class="introducao">Objetivo: {{ objetivo.titulo }} · {{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}. O KR tem um único responsável; Owner e Sponsor pertencem ao objetivo.</p>
+
+  <form method="post" class="formulario cartao" novalidate data-formulario-kr>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.versao }}
+    {% for campo, tipos in form.campos_com_tipos %}
+      {% include "core/_campo.html" with campo=campo tipos=tipos %}
+    {% endfor %}
+    <details class="ajuda">
+      <summary>Como o progresso é calculado</summary>
+      <ul>
+        <li><strong>Numérico:</strong> (valor atual − inicial) ÷ (meta − inicial). Ex.: de 100 para 150, com 125 medidos ⇒ 50%. Serve também para percentuais: de 12% para 15%, com 13,5% ⇒ 50% de progresso.</li>
+        <li><strong>Manutenção:</strong> indica apenas se o valor está dentro ou fora do limite.</li>
+        <li><strong>Binário:</strong> 0% (não concluído) ou 100% (concluído).</li>
+        <li><strong>Marcos:</strong> marcos concluídos ÷ total de marcos, todos com o mesmo peso.</li>
+      </ul>
+    </details>
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% if kr %}{% url 'okrs:kr_detalhe' kr.pk %}{% else %}{% url 'okrs:objetivo_detalhe' objetivo.pk %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+  <script src="{% static 'js/kr_form.js' %}" defer></script>
+{% endblock %}

@@ -1,5 +1,7 @@
 """Dados fictícios para os testes de OKRs."""
 
+from decimal import Decimal
+
 from apps.cadastros.tests import fabricas as cadastros
 from apps.cadastros.tests.fabricas import ATOR, TODAS
 from apps.okrs import services
@@ -30,3 +32,16 @@ class Cenario:
         return services.criar_objetivo(
             empresa_id=self.empresa.pk, dados=dados, ator=ATOR, escopo=TODAS
         )
+
+    def kr(self, objetivo, titulo="Novos clientes", responsavel=None, **medicao):
+        dados = {
+            "titulo": titulo,
+            "responsavel": responsavel or self.ana,
+            "tipo_medicao": "numerico",
+            "regra": "crescente",
+            "unidade": "clientes",
+            "valor_inicial": Decimal("100"),
+            "meta": Decimal("150"),
+            **medicao,
+        }
+        return services.criar_kr(objetivo_id=objetivo.pk, dados=dados, ator=ATOR, escopo=TODAS)

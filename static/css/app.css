@@ -246,3 +246,18 @@ input[type="text"], input[type="search"], input[type="email"], input[type="numbe
 .lista-simples__com-acao form { margin: 0; }
 .formulario textarea { width: 100%; }
 .formulario select { width: 100%; }
+
+/* ---------- KRs (E6) ---------- */
+.progresso { display: flex; align-items: center; gap: 8px; min-width: 160px; }
+.progresso__trilho { flex: 1; height: 10px; background: var(--cor-neutro-fundo); border-radius: 999px; overflow: hidden; min-width: 80px; }
+.progresso__barra { height: 100%; border-radius: 999px; }
+.progresso__texto { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+.campo { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+.campo label { font-weight: 600; }
+.campo fieldset { border: 0; padding: 0; margin: 0; }
+.campo legend { font-weight: 600; padding: 0; margin-bottom: 4px; }
+.campo fieldset label { font-weight: normal; display: flex; gap: 6px; align-items: center; }
+.campo input[type="text"], .campo select, .campo textarea { width: 100%; }
+.campo .helptext { font-size: 0.85rem; color: var(--cor-texto-suave); }
+.ajuda { margin: 8px 0 16px; font-size: 0.9rem; }
+.ajuda summary { cursor: pointer; color: var(--cor-marca); }

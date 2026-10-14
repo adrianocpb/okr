@@ -134,7 +134,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E5 — Objetivos e vínculos anual ↔ trimestral ✅ (aguardando validação)
+### E5 — Objetivos e vínculos anual ↔ trimestral ✅
 
 **Objetivo:** cadastro de objetivos com Owner e Sponsor e desdobramento explícito.
 **Dependências:** E3, E4.
@@ -149,7 +149,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E6 — KRs, métricas e cálculo de progresso
+### E6 — KRs, métricas e cálculo de progresso ✅ (aguardando validação)
 
 **Objetivo:** KRs com medição flexível e cálculo correto e testado.
 **Dependências:** E5.
@@ -329,7 +329,6 @@ As dúvidas Q-01 a Q-21 foram decididas em 14/10/2026 (ver [Especificação Func
 
 | Dúvida | Necessária antes de |
 |---|---|
-| Q-22 (pontos de referência da escala de cores) | E6 |
 | Q-13b (permissões do perfil Usuário), Q-14b (provedor de SSO) | E13 |
 | Q-19 (hospedagem; provável teste com Supabase) | E14 |
 

@@ -1,0 +1,8 @@
+{% load okrs_formato %}
+{# Barra de progresso de um KR. Espera `situacao` (SituacaoProgresso). A cor sempre vem com texto. #}
+<div class="progresso" title="{{ situacao.texto }}">
+  <div class="progresso__trilho" aria-hidden="true">
+    <div class="progresso__barra" style="width: {% if situacao.progresso.percentual_barra is not None %}{{ situacao.progresso.percentual_barra|stringformat:'s' }}{% else %}100{% endif %}%; background: {{ situacao.cor }};"></div>
+  </div>
+  <span class="progresso__texto">{{ situacao.texto }}</span>
+</div>

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load okrs_formato %}
+
+{% block titulo %}KR · {{ kr.titulo|truncatechars:60 }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+  </nav>
+
+  <div class="cabecalho-pagina">
+    <h1><span class="texto-suave">KR ·</span> {{ kr.titulo }}</h1>
+    <div class="acoes">
+      <a class="botao botao--primario" href="{% url 'okrs:kr_editar' kr.pk %}">Editar</a>
+    </div>
+  </div>
+
+  {% if kr.responsavel.arquivado %}
+    <p class="aviso aviso--alerta">O responsável por este KR está arquivado. Considere atribuir outra pessoa.</p>
+  {% endif %}
+  {% if kr.tipo_medicao == "marcos" and not marcos %}
+    <p class="aviso aviso--alerta">Este KR é medido por marcos, mas ainda não tem marcos cadastrados.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Progresso</h2>
+    {% include "okrs/_progresso.html" %}
+    <p class="texto-suave">O progresso é calculado a partir dos check-ins. O registro de check-ins entra na próxima etapa do desenvolvimento.</p>
+  </section>
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Objetivo</dt><dd><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a> <span class="texto-suave">({{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }})</span></dd>
+      <dt>Responsável</dt><dd><a href="{% url 'cadastros:pessoa_detalhe' kr.responsavel.pk %}">{{ kr.responsavel.nome }}</a>{% if kr.responsavel.arquivado %} <span class="selo selo--neutro">arquivada</span>{% endif %}</dd>
+      <dt>Tipo de medição</dt><dd>{{ kr.get_tipo_medicao_display }}</dd>
+      <dt>Medição</dt><dd>{{ kr|resumo_medicao }}</dd>
+      {% if kr.unidade %}<dt>Unidade</dt><dd>{{ kr.unidade }}</dd>{% endif %}
+      <dt>Check-in</dt><dd>A cada {{ kr.frequencia_checkin_dias }} dia{{ kr.frequencia_checkin_dias|pluralize }}{% if kr.frequencia_checkin_dias == 14 %} (quinzenal){% elif kr.frequencia_checkin_dias == 7 %} (semanal){% elif kr.frequencia_checkin_dias == 30 %} (mensal){% endif %}</dd>
+      <dt>Status</dt><dd>{% include "okrs/_kr_status.html" %}</dd>
+    </dl>
+    {% if kr.descricao %}<h3>Descrição</h3><p>{{ kr.descricao|linebreaksbr }}</p>{% endif %}
+  </section>
+
+  {% if kr.tipo_medicao == "marcos" %}
+    <section class="cartao" aria-labelledby="titulo-marcos">
+      <h2 id="titulo-marcos">Marcos</h2>
+      <p class="texto-suave">Todos os marcos têm o mesmo peso no cálculo do progresso.</p>
+      {% if marcos %}
+        <ol class="lista-simples">
+          {% for marco in marcos %}
+            <li class="lista-simples__com-acao">
+              <span>{{ marco.ordem }}. {{ marco.descricao }}{% if marco.prazo %} <span class="texto-suave">· prazo {{ marco.prazo|date:"d/m/Y" }}</span>{% endif %}</span>
+              <form method="post" action="{% url 'okrs:marco_remover' kr.pk marco.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="botao botao--pequeno">Remover</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ol>
+      {% endif %}
+      <form method="post" action="{% url 'okrs:marco_adicionar' kr.pk %}" class="filtros">
+        {% csrf_token %}
+        <label>{{ form_marco.descricao.label }} {{ form_marco.descricao }}</label>
+        <label>{{ form_marco.prazo.label }} (opcional) {{ form_marco.prazo }}</label>
+        <button type="submit" class="botao">Adicionar marco</button>
+      </form>
+    </section>
+  {% endif %}
+
+  {% include "core/_historico.html" %}
+{% endblock %}

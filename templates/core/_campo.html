@@ -1,0 +1,15 @@
+{# Um campo de formulário com rótulo, ajuda e erros. Espera `campo`; opcional `tipos` (data-tipos). #}
+<div class="campo"{% if tipos %} data-tipos="{{ tipos }}"{% endif %}>
+  {% if campo.field.widget.input_type == "radio" %}
+    <fieldset>
+      <legend>{{ campo.label }}</legend>
+      {{ campo.errors }}
+      {{ campo }}
+    </fieldset>
+  {% else %}
+    {{ campo.label_tag }}
+    {{ campo.errors }}
+    {{ campo }}
+  {% endif %}
+  {% if campo.help_text %}<div class="helptext">{{ campo.help_text }}</div>{% endif %}
+</div>

@@ -1,6 +1,7 @@
 """Regras de gravação de objetivos e de seus vínculos."""
 
 from django.db import transaction
+from django.db.models import Max
 
 from apps.auditoria.models import RegistroAlteracao
 from apps.auditoria.services import registrar_alteracao
@@ -9,8 +10,9 @@ from apps.cadastros.models import Ciclo, Pessoa
 from apps.core import services
 from apps.core.acesso import Ator, EscopoAcesso
 from apps.core.erros import ErroDeNegocio
+from apps.core.texto import espacos_simples
 from apps.okrs import selectors
-from apps.okrs.models import Objetivo, VinculoObjetivo
+from apps.okrs.models import Marco, Objetivo, ResultadoChave, VinculoObjetivo
 
 Acao = RegistroAlteracao.Acao
 
@@ -111,3 +113,81 @@ def desvincular(vinculo_id: int, *, ator: Ator, escopo: EscopoAcesso) -> None:
     selectors.obter_objetivo(escopo, vinculo.objetivo_trimestral_id)
     _registrar_vinculo(Acao.DESVINCULO, vinculo, ator)
     vinculo.delete()
+
+
+# --------------------------------------------------------------------- KRs
+
+CAMPOS_KR = (
+    "titulo",
+    "descricao",
+    "responsavel",
+    "tipo_medicao",
+    "regra",
+    "unidade",
+    "casas_decimais",
+    "valor_inicial",
+    "meta",
+    "limite_inferior",
+    "limite_superior",
+    "frequencia_checkin_dias",
+    "status",
+)
+
+
+def _dados_kr(dados: dict) -> dict:
+    filtrados = {k: v for k, v in dados.items() if k in CAMPOS_KR}
+    if isinstance(filtrados.get("responsavel"), int):
+        filtrados["responsavel"] = Pessoa.objects.get(pk=filtrados["responsavel"])
+    if filtrados.get("regra") is None and "regra" in filtrados:
+        filtrados["regra"] = ""
+    return filtrados
+
+
+def criar_kr(*, objetivo_id: int, dados: dict, ator: Ator, escopo: EscopoAcesso) -> ResultadoChave:
+    objetivo = selectors.obter_objetivo(escopo, objetivo_id)
+    if objetivo.encerrado:
+        raise ErroDeNegocio("Objetivo concluído ou cancelado não recebe novos KRs.")
+    return services.criar(ResultadoChave(objetivo=objetivo, **_dados_kr(dados)), ator=ator)
+
+
+def atualizar_kr(
+    kr_id: int, *, dados: dict, versao: int, ator: Ator, escopo: EscopoAcesso
+) -> ResultadoChave:
+    """Atualiza o KR. O objetivo ao qual pertence não muda."""
+    kr = selectors.obter_kr(escopo, kr_id)
+    return services.atualizar(kr, _dados_kr(dados), versao_esperada=versao, ator=ator)
+
+
+@transaction.atomic
+def adicionar_marco(
+    kr_id: int, *, descricao: str, prazo=None, ator: Ator, escopo: EscopoAcesso
+) -> Marco:
+    kr = selectors.obter_kr(escopo, kr_id)
+    if kr.tipo_medicao != ResultadoChave.TipoMedicao.MARCOS:
+        raise ErroDeNegocio("Marcos só podem ser cadastrados em KRs do tipo Marcos.")
+    ultima = kr.marcos.aggregate(maior=Max("ordem"))["maior"] or 0
+    marco = Marco(kr=kr, descricao=espacos_simples(descricao), ordem=ultima + 1, prazo=prazo)
+    marco.full_clean()
+    marco.save()
+    registrar_alteracao(
+        objeto=kr,
+        acao=Acao.ALTERACAO,
+        ator=ator,
+        alteracoes={"marco": {"antes": None, "depois": str(marco)}},
+    )
+    return marco
+
+
+@transaction.atomic
+def remover_marco(marco_id: int, *, ator: Ator, escopo: EscopoAcesso) -> None:
+    marco = Marco.objects.filter(pk=marco_id).first()
+    if marco is None:
+        raise ErroDeNegocio("Marco não encontrado.")
+    kr = selectors.obter_kr(escopo, marco.kr_id)
+    registrar_alteracao(
+        objeto=kr,
+        acao=Acao.ALTERACAO,
+        ator=ator,
+        alteracoes={"marco": {"antes": str(marco), "depois": None}},
+    )
+    marco.delete()
