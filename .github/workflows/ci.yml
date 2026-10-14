@@ -1,0 +1,42 @@
+# Integração contínua: lint, verificação de migrações e testes.
+# Usa somente dados fictícios criados pelos próprios testes; nenhum segredo é necessário.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: config.settings.test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements/*.txt
+
+      - name: Instalar dependências
+        run: pip install -r requirements/dev.txt
+
+      - name: Lint (ruff)
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Verificação do Django
+        run: python manage.py check
+
+      - name: Migrações pendentes
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Testes
+        run: coverage run -m pytest && coverage report

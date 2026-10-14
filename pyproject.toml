@@ -1,0 +1,31 @@
+[project]
+name = "okr"
+version = "0.1.0"
+description = "Gestão e acompanhamento de OKRs das empresas do grupo"
+requires-python = ">=3.14"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+testpaths = ["apps", "config"]
+addopts = "--strict-markers"
+
+[tool.coverage.run]
+source = ["apps", "config"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle
+  "W",   # avisos de estilo
+  "F",   # pyflakes
+  "I",   # ordenação de imports
+  "B",   # bugbear
+  "UP",  # sintaxe moderna
+  "DJ",  # boas práticas Django
+]

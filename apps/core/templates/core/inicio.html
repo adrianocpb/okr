@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block titulo %}Início{% endblock %}
+
+{% block conteudo %}
+  <h1>Gestão de OKRs do Grupo</h1>
+  <p class="introducao">
+    Cadastro e acompanhamento dos objetivos, resultados-chave e iniciativas das empresas do grupo.
+  </p>
+
+  <section class="cartao" aria-labelledby="titulo-situacao">
+    <h2 id="titulo-situacao">Situação do sistema</h2>
+    <dl class="situacao">
+      <dt>Banco de dados</dt>
+      <dd>
+        {% if banco.conectado %}
+          <span class="selo selo--ok">Conectado</span> {{ banco.motor }}
+        {% else %}
+          <span class="selo selo--erro">Sem conexão</span> {{ banco.motor }}
+        {% endif %}
+      </dd>
+
+      {% if banco.conectado %}
+        <dt>Estrutura do banco</dt>
+        <dd>
+          {% if banco.migracoes_pendentes %}
+            <span class="selo selo--alerta">Desatualizada</span>
+            {{ banco.migracoes_pendentes }} migraç{{ banco.migracoes_pendentes|pluralize:"ão,ões" }} pendente{{ banco.migracoes_pendentes|pluralize }}.
+            Execute <code>python manage.py migrate</code>.
+          {% else %}
+            <span class="selo selo--ok">Atualizada</span>
+          {% endif %}
+        </dd>
+      {% endif %}
+    </dl>
+    {% if not banco.conectado %}
+      <p class="aviso">Não foi possível conectar ao banco de dados. Verifique a variável <code>DATABASE_URL</code> e os registros do servidor.</p>
+    {% endif %}
+  </section>
+{% endblock %}

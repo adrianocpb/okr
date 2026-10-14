@@ -1,0 +1,6 @@
+# Dependências de desenvolvimento e testes
+-r base.txt
+pytest==9.1.1
+pytest-django==4.14.0
+coverage==7.16.2
+ruff==0.17.0

@@ -1,0 +1,36 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Início{% endblock %} · OKR do Grupo</title>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="topo__marca"><a href="{% url 'core:inicio' %}">OKR do Grupo</a></div>
+    <nav class="topo__menu" aria-label="Navegação principal">
+      {# Os itens de menu entram à medida que cada módulo é entregue (ver docs/PLANO_IMPLEMENTACAO.md). #}
+      {% url 'core:inicio' as url_inicio %}
+      <a href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>Início</a>
+    </nav>
+  </header>
+
+  {% if messages %}
+    <ul class="mensagens" role="status">
+      {% for mensagem in messages %}
+        <li class="mensagem mensagem--{{ mensagem.tags }}">{{ mensagem }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <main id="conteudo" class="conteudo">
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    Versão local de desenvolvimento: sem login e acessível apenas neste computador.
+  </footer>
+</body>
+</html>

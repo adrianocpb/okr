@@ -52,7 +52,7 @@ Convenção usada neste documento:
 | Banco local | SQLite (via ORM do Django) | embutido |
 | Banco em servidor | PostgreSQL (próprio ou gerenciado, como o Supabase) | 16+ |
 | Driver PostgreSQL | psycopg 3 | somente quando a etapa de PostgreSQL começar |
-| Configuração | Variáveis de ambiente + `.env` local; `DATABASE_URL` interpretada por `dj-database-url` | — |
+| Configuração | Variáveis de ambiente + `.env` local (lido por `python-dotenv` somente em dev); `DATABASE_URL` interpretada por `dj-database-url` | — |
 | Criptografia de backups | `cryptography` (Fernet: AES + HMAC) | a partir da E2 |
 | Testes | pytest + pytest-django + coverage | — |
 | Qualidade de código | ruff (lint e formatação) | — |
@@ -147,6 +147,8 @@ Regras transversais:
 ```
 okr/
 ├── .gitignore
+├── .gitattributes            # finais de linha normalizados (LF)
+├── .github/workflows/ci.yml  # CI: lint, migrações e testes
 ├── .env.example              # somente nomes de variáveis e valores fictícios (Etapa 1)
 ├── README.md                 # como executar localmente
 ├── pyproject.toml            # configuração do ruff e do pytest (Etapa 1)
@@ -165,9 +167,10 @@ okr/
 │   ├── wsgi.py
 │   └── asgi.py
 ├── apps/
+│   ├── contas/               # modelo Usuario (login corporativo na E13)
 │   ├── core/                 # base comum: modelo abstrato, Ator, EscopoAcesso, erros,
 │   │   ├── banco/            #   utilidades, backup/restauração (isolado por motor de banco)
-│   │   └── management/commands/   # backup_banco, restaurar_banco, verificar_banco
+│   │   └── management/commands/   # gerar_chave_backup, backup_banco, restaurar_banco, verificar_banco
 │   ├── auditoria/            # RegistroAlteracao (histórico estrutural)
 │   ├── cadastros/            # Empresa, Pessoa, vínculo pessoa-empresa, Ciclo
 │   ├── okrs/                 # Objetivo, VinculoObjetivo, ResultadoChave, Marco, Iniciativa

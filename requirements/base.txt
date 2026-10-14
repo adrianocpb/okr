@@ -1,0 +1,4 @@
+# Dependências de execução (versões fixadas; atualizar de forma deliberada e testada)
+Django==5.2.18
+dj-database-url==3.1.2
+python-dotenv==1.2.4
