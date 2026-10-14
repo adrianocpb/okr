@@ -1,0 +1,5 @@
+{# Selo de status do objetivo. Espera `objetivo`. #}
+{% if objetivo.status == "ativo" %}<span class="selo selo--ok">Ativo</span>
+{% elif objetivo.status == "rascunho" %}<span class="selo selo--info">Rascunho</span>
+{% elif objetivo.status == "concluido" %}<span class="selo selo--neutro">Concluído</span>
+{% else %}<span class="selo selo--erro">Cancelado</span>{% endif %}

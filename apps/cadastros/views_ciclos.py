@@ -7,9 +7,13 @@ from apps.auditoria.selectors import historico_legivel
 from apps.cadastros import selectors, services
 from apps.cadastros.forms import CicloAnualForm, CicloEdicaoForm, TrimestreForm
 from apps.cadastros.models import Ciclo
-from apps.cadastros.views import _alternar_arquivamento, _executar, _filtros, _pagina
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
 from apps.core.erros import ErroDeNegocio
+from apps.core.views_apoio import alternar_arquivamento as _alternar_arquivamento
+from apps.core.views_apoio import executar as _executar
+from apps.core.views_apoio import filtros as _filtros
+from apps.core.views_apoio import pagina as _pagina
+from apps.okrs import selectors as okrs_selectors
 
 
 def _inteiro(valor: str) -> int | None:
@@ -47,8 +51,13 @@ def ciclo_lista(request):
 
 
 def ciclo_detalhe(request, pk):
-    ciclo = selectors.obter_ciclo(escopo_da_requisicao(request), pk)
-    contexto = {"ciclo": ciclo, "historico": historico_legivel(ciclo)}
+    escopo = escopo_da_requisicao(request)
+    ciclo = selectors.obter_ciclo(escopo, pk)
+    contexto = {
+        "ciclo": ciclo,
+        "objetivos": okrs_selectors.listar_objetivos(escopo, ciclo_id=ciclo.pk),
+        "historico": historico_legivel(ciclo),
+    }
     if ciclo.tipo == Ciclo.Tipo.ANUAL:
         trimestres = list(selectors.trimestres_do_ciclo(ciclo))
         ativos = {t.trimestre for t in trimestres if not t.arquivado}

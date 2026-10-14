@@ -10,7 +10,11 @@ from django.utils import formats, timezone
 
 from apps.auditoria.services import historico_do_objeto
 
-ROTULOS_ESPECIAIS = {"empresa": "Empresa"}
+ROTULOS_ESPECIAIS = {
+    "empresa": "Empresa",
+    "objetivo_anual": "Objetivo anual",
+    "objetivo_trimestral": "Objetivo trimestral",
+}
 DATA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
 

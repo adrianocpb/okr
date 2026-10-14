@@ -8,6 +8,14 @@
     Cadastro e acompanhamento dos objetivos, resultados-chave e iniciativas das empresas do grupo.
   </p>
 
+  <section class="cartao" aria-labelledby="titulo-okrs">
+    <h2 id="titulo-okrs">OKRs</h2>
+    <div class="acoes">
+      <a class="botao botao--primario" href="{% url 'okrs:objetivo_lista' %}">Objetivos</a>
+      <a class="botao" href="{% url 'okrs:objetivo_novo' %}">Novo objetivo</a>
+    </div>
+  </section>
+
   <section class="cartao" aria-labelledby="titulo-atalhos">
     <h2 id="titulo-atalhos">Cadastros</h2>
     <div class="acoes">

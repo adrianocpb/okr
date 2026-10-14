@@ -1,53 +1,16 @@
 from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.core.paginator import Paginator
 from django.shortcuts import redirect, render
-from django.utils.http import urlencode
 from django.views.decorators.http import require_POST
 
 from apps.auditoria.selectors import historico_legivel
 from apps.cadastros import selectors, services
 from apps.cadastros.forms import EmpresaForm, PessoaForm
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
-from apps.core.erros import ErroDeNegocio
-from apps.core.formularios import aplicar_erros
-
-ITENS_POR_PAGINA = 25
-
-
-def _pagina(request, queryset):
-    return Paginator(queryset, ITENS_POR_PAGINA).get_page(request.GET.get("pagina"))
-
-
-def _filtros(request, *nomes):
-    valores = {nome: request.GET.get(nome, "").strip() for nome in nomes}
-    return valores, urlencode({k: v for k, v in valores.items() if v})
-
-
-def _executar(form, operacao):
-    """Executa a operação do service e leva eventuais erros para o formulário."""
-    try:
-        return operacao()
-    except ValidationError as erro:
-        aplicar_erros(form, erro)
-    except ErroDeNegocio as erro:
-        form.add_error(None, erro.mensagem)
-    return None
-
-
-def _alternar_arquivamento(request, operacao, mensagem_sucesso):
-    try:
-        versao = int(request.POST.get("versao", ""))
-    except ValueError:
-        messages.error(request, "Requisição inválida: versão do registro ausente.")
-        return
-    try:
-        operacao(versao)
-    except ErroDeNegocio as erro:
-        messages.error(request, erro.mensagem)
-    else:
-        messages.success(request, mensagem_sucesso)
-
+from apps.core.views_apoio import alternar_arquivamento as _alternar_arquivamento
+from apps.core.views_apoio import executar as _executar
+from apps.core.views_apoio import filtros as _filtros
+from apps.core.views_apoio import pagina as _pagina
+from apps.okrs import selectors as okrs_selectors
 
 # ---------------------------------------------------------------- empresas
 
@@ -80,6 +43,9 @@ def empresa_detalhe(request, pk):
             "empresa": empresa,
             "pessoas": selectors.pessoas_da_empresa(escopo, empresa),
             "ciclos": selectors.ciclos_da_empresa(escopo, empresa),
+            "total_objetivos": okrs_selectors.listar_objetivos(
+                escopo, empresa_id=empresa.pk
+            ).count(),
             "historico": historico_legivel(empresa),
         },
     )
@@ -175,11 +141,16 @@ def pessoa_lista(request):
 
 
 def pessoa_detalhe(request, pk):
-    pessoa = selectors.obter_pessoa(escopo_da_requisicao(request), pk)
+    escopo = escopo_da_requisicao(request)
+    pessoa = selectors.obter_pessoa(escopo, pk)
     return render(
         request,
         "cadastros/pessoa_detalhe.html",
-        {"pessoa": pessoa, "historico": historico_legivel(pessoa)},
+        {
+            "pessoa": pessoa,
+            "responsabilidades": okrs_selectors.responsabilidades_da_pessoa(escopo, pessoa),
+            "historico": historico_legivel(pessoa),
+        },
     )
 
 

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block titulo %}Objetivos{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Objetivos</h1>
+    <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}{% if empresa_id %}?empresa={{ empresa_id }}{% endif %}">Novo objetivo</a>
+  </div>
+
+  <form method="get" class="filtros" role="search" aria-label="Filtrar objetivos">
+    <label>Buscar
+      <input type="search" name="busca" value="{{ filtros.busca }}" placeholder="Título">
+    </label>
+    <label>Empresa
+      <select name="empresa">
+        <option value="">Todas</option>
+        {% for empresa in empresas %}<option value="{{ empresa.pk }}"{% if empresa.pk == empresa_id %} selected{% endif %}>{{ empresa.sigla }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Ciclo
+      <select name="ciclo">
+        <option value="">Todos</option>
+        {% for ciclo in ciclos %}<option value="{{ ciclo.pk }}"{% if ciclo.pk == ciclo_id %} selected{% endif %}>{{ ciclo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Status
+      <select name="status">
+        {% for valor, rotulo in status_opcoes.items %}<option value="{{ valor }}"{% if valor == filtros.status %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="submit" class="botao">Filtrar</button>
+    {% if filtrado %}<a href="{% url 'okrs:objetivo_lista' %}">Limpar filtros</a>{% endif %}
+  </form>
+
+  {% if pagina.object_list %}
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th scope="col">Objetivo</th>
+          <th scope="col">Empresa</th>
+          <th scope="col">Ciclo</th>
+          <th scope="col">Owner</th>
+          <th scope="col">Sponsor</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for objetivo in pagina.object_list %}
+          <tr>
+            <td><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}"><strong>{{ objetivo.titulo }}</strong></a></td>
+            <td>{{ objetivo.empresa.sigla }}</td>
+            <td>{{ objetivo.ciclo.rotulo }}</td>
+            <td>{{ objetivo.owner.nome }}</td>
+            <td>{{ objetivo.sponsor.nome }}</td>
+            <td>{% include "okrs/_status.html" %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% include "core/_paginacao.html" %}
+  {% else %}
+    <p class="vazio">
+      {% if filtrado %}Nenhum objetivo encontrado com esses filtros.
+      {% else %}Nenhum objetivo cadastrado ainda. <a href="{% url 'okrs:objetivo_novo' %}">Cadastre o primeiro objetivo</a>.{% endif %}
+    </p>
+  {% endif %}
+{% endblock %}

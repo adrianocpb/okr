@@ -97,7 +97,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 | RF-19 | Vincular explicitamente um objetivo trimestral a um ou mais objetivos anuais (relação de desdobramento). O vínculo é **opcional**: um objetivo trimestral pode existir sem objetivo anual. |
 | RF-20 | Validações do vínculo: o objetivo de origem deve estar em ciclo anual e o de destino em ciclo trimestral contido nele; ambos **obrigatoriamente da mesma empresa** [Decidido em Q-06: não há vínculo entre empresas]; sem vínculos duplicados. |
 | RF-21 | A tela do objetivo exibe: dados, KRs com progresso individual, iniciativas, vínculos (anual ↔ trimestrais), histórico de check-ins dos KRs e histórico de alterações. |
-| RF-22 | Editar e arquivar objetivo, com auditoria. |
+| RF-22 | Editar objetivo, com auditoria. A empresa não muda após a criação; o ciclo só pode ser trocado se o objetivo não tiver vínculos. Objetivos não são arquivados: encerram-se pelo status (Concluído ou Cancelado) [Decisão de implementação na E5: evita dois conceitos para o mesmo fim]. A criação começa pela escolha da empresa, para que o formulário ofereça apenas os ciclos e as pessoas dela. |
 
 ### 3.5. Resultados-chave (KRs)
 

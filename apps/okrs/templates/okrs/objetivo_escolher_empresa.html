@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novo objetivo{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a></nav>
+  <h1>Novo objetivo</h1>
+  <p class="introducao">Escolha a empresa. Em seguida, o formulário mostrará os ciclos e as pessoas vinculadas a ela.</p>
+
+  {% if empresas %}
+    <ul class="lista-escolha">
+      {% for empresa in empresas %}
+        <li><a class="botao" href="?empresa={{ empresa.pk }}"><strong>{{ empresa.sigla }}</strong> — {{ empresa.nome }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="aviso aviso--neutro">Não há empresas ativas. <a href="{% url 'cadastros:empresa_nova' %}">Cadastre uma empresa</a> antes de criar objetivos.</p>
+  {% endif %}
+{% endblock %}

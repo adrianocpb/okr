@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block titulo %}{% if objetivo %}Editar objetivo{% else %}Novo objetivo{% endif %}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a>
+    {% if objetivo %} › <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>{% endif %}
+  </nav>
+  <h1>{% if objetivo %}Editar objetivo{% else %}Novo objetivo{% endif %} <span class="texto-suave">· {{ empresa.sigla }}</span></h1>
+  {% if not objetivo %}<p class="introducao">Empresa: {{ empresa }}. <a href="{% url 'okrs:objetivo_novo' %}">Trocar empresa</a></p>{% endif %}
+
+  {% if not form.fields.ciclo.queryset.exists %}
+    <p class="aviso aviso--neutro">Esta empresa não tem ciclos ativos. <a href="{% url 'cadastros:ciclo_anual_novo' %}?empresa={{ empresa.pk }}">Cadastre um ciclo</a> antes de criar objetivos.</p>
+  {% endif %}
+  {% if not form.fields.owner.queryset.exists %}
+    <p class="aviso aviso--neutro">Esta empresa não tem pessoas ativas vinculadas. <a href="{% url 'cadastros:pessoa_nova' %}?empresa={{ empresa.pk }}">Cadastre uma pessoa</a> para definir Owner e Sponsor.</p>
+  {% endif %}
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% if objetivo %}{% url 'okrs:objetivo_detalhe' objetivo.pk %}{% else %}{% url 'okrs:objetivo_lista' %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

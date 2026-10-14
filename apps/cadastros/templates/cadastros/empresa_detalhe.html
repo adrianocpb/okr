@@ -36,6 +36,11 @@
       <dt>Sigla</dt><dd>{{ empresa.sigla }}</dd>
       <dt>Cadastrada em</dt><dd>{{ empresa.criado_em|date:"d/m/Y H:i" }}</dd>
       <dt>Situação</dt><dd>{% if empresa.arquivado %}Arquivada{% else %}Ativa{% endif %}</dd>
+      <dt>Objetivos</dt>
+      <dd>
+        <a href="{% url 'okrs:objetivo_lista' %}?empresa={{ empresa.pk }}">{{ total_objetivos }} objetivo{{ total_objetivos|pluralize }}</a>
+        {% if not empresa.arquivado %}· <a href="{% url 'okrs:objetivo_novo' %}?empresa={{ empresa.pk }}">Novo objetivo</a>{% endif %}
+      </dd>
     </dl>
   </section>
 

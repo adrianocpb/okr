@@ -46,6 +46,22 @@
     </dl>
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-objetivos">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-objetivos">Objetivos do ciclo</h2>
+      {% if not ciclo.arquivado and not ciclo.empresa.arquivado %}<a class="botao" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">Novo objetivo neste ciclo</a>{% endif %}
+    </div>
+    {% if objetivos %}
+      <ul class="lista-simples">
+        {% for objetivo in objetivos %}
+          <li><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a> <span class="texto-suave">· Owner: {{ objetivo.owner.nome }}</span> {% include "okrs/_status.html" %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="texto-suave">Nenhum objetivo neste ciclo.</p>
+    {% endif %}
+  </section>
+
   {% if ciclo.tipo == "anual" %}
     <section class="cartao" aria-labelledby="titulo-trimestres">
       <div class="cabecalho-secao">

@@ -18,6 +18,7 @@ def view_erro_inesperado(request):
 urlpatterns = [
     path("", include("apps.core.urls")),
     path("", include("apps.cadastros.urls")),
+    path("", include("apps.okrs.urls")),
     path("teste/erro-negocio/", view_erro_de_negocio),
     path("teste/conflito/", view_conflito),
     path("teste/erro-inesperado/", view_erro_inesperado),

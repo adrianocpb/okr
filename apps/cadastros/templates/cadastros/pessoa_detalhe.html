@@ -45,5 +45,24 @@
     </dl>
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-responsabilidades">
+    <h2 id="titulo-responsabilidades">Responsabilidades</h2>
+    {% if responsabilidades.owner or responsabilidades.sponsor %}
+      <table class="tabela tabela--compacta">
+        <thead><tr><th scope="col">Papel</th><th scope="col">Objetivo</th><th scope="col">Empresa</th><th scope="col">Ciclo</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          {% for objetivo in responsabilidades.owner %}
+            <tr><td>Owner</td><td><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a></td><td>{{ objetivo.empresa.sigla }}</td><td>{{ objetivo.ciclo.rotulo }}</td><td>{% include "okrs/_status.html" %}</td></tr>
+          {% endfor %}
+          {% for objetivo in responsabilidades.sponsor %}
+            <tr><td>Sponsor</td><td><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a></td><td>{{ objetivo.empresa.sigla }}</td><td>{{ objetivo.ciclo.rotulo }}</td><td>{% include "okrs/_status.html" %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="texto-suave">Nenhuma responsabilidade em objetivos.</p>
+    {% endif %}
+  </section>
+
   {% include "core/_historico.html" %}
 {% endblock %}

@@ -236,3 +236,13 @@ input[type="text"], input[type="search"], input[type="email"], input[type="numbe
 
 .selo--info { color: #1f4e79; background: #dceaf7; }
 .filtros__marcacao span { display: flex; gap: 6px; align-items: center; color: var(--cor-texto); font-size: 0.95rem; padding-bottom: 6px; }
+
+/* ---------- Objetivos (E5) ---------- */
+.aviso--alerta { color: var(--cor-alerta); background: var(--cor-alerta-fundo); border-radius: var(--raio); padding: 8px 12px; }
+.botao--pequeno { padding: 2px 10px; font-size: 0.85rem; }
+.lista-escolha { list-style: none; padding: 0; display: grid; gap: 8px; max-width: 640px; }
+.lista-escolha .botao { display: block; }
+.lista-simples__com-acao { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lista-simples__com-acao form { margin: 0; }
+.formulario textarea { width: 100%; }
+.formulario select { width: 100%; }

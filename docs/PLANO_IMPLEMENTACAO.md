@@ -122,7 +122,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E4 — Ciclos ✅ (aguardando validação)
+### E4 — Ciclos ✅
 
 **Objetivo:** gestão de ciclos anuais e trimestrais.
 **Dependências:** E3 (cada empresa tem seus próprios ciclos, decisão Q-03).
@@ -134,7 +134,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E5 — Objetivos e vínculos anual ↔ trimestral
+### E5 — Objetivos e vínculos anual ↔ trimestral ✅ (aguardando validação)
 
 **Objetivo:** cadastro de objetivos com Owner e Sponsor e desdobramento explícito.
 **Dependências:** E3, E4.

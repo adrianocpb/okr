@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ objetivo.titulo|truncatechars:60 }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_lista' %}?empresa={{ objetivo.empresa.pk }}">{{ objetivo.empresa.sigla }}</a> ›
+    <a href="{% url 'okrs:objetivo_lista' %}?empresa={{ objetivo.empresa.pk }}&amp;ciclo={{ objetivo.ciclo.pk }}">{{ objetivo.ciclo.rotulo }}</a>
+  </nav>
+
+  <div class="cabecalho-pagina">
+    <h1>{{ objetivo.titulo }}</h1>
+    <div class="acoes">
+      <a class="botao botao--primario" href="{% url 'okrs:objetivo_editar' objetivo.pk %}">Editar</a>
+    </div>
+  </div>
+
+  {% if objetivo.mesma_pessoa_owner_sponsor %}
+    <p class="aviso aviso--alerta">Owner e Sponsor são a mesma pessoa.</p>
+  {% endif %}
+  {% if objetivo.owner.arquivado or objetivo.sponsor.arquivado %}
+    <p class="aviso aviso--alerta">Há responsável arquivado neste objetivo. Considere atribuir outra pessoa.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Empresa</dt><dd><a href="{% url 'cadastros:empresa_detalhe' objetivo.empresa.pk %}">{{ objetivo.empresa }}</a></dd>
+      <dt>Ciclo</dt><dd><a href="{% url 'cadastros:ciclo_detalhe' objetivo.ciclo.pk %}">{{ objetivo.ciclo.rotulo }}</a> <span class="texto-suave">({{ objetivo.ciclo.periodo }})</span></dd>
+      <dt>Owner</dt><dd><a href="{% url 'cadastros:pessoa_detalhe' objetivo.owner.pk %}">{{ objetivo.owner.nome }}</a>{% if objetivo.owner.arquivado %} <span class="selo selo--neutro">arquivada</span>{% endif %}</dd>
+      <dt>Sponsor</dt><dd><a href="{% url 'cadastros:pessoa_detalhe' objetivo.sponsor.pk %}">{{ objetivo.sponsor.nome }}</a>{% if objetivo.sponsor.arquivado %} <span class="selo selo--neutro">arquivada</span>{% endif %}</dd>
+      <dt>Status</dt><dd>{% include "okrs/_status.html" %}</dd>
+      {% if objetivo.comentario_status %}<dt>Comentário do status</dt><dd>{{ objetivo.comentario_status|linebreaksbr }}</dd>{% endif %}
+    </dl>
+    {% if objetivo.descricao %}
+      <h3>Descrição</h3>
+      <p>{{ objetivo.descricao|linebreaksbr }}</p>
+    {% endif %}
+  </section>
+
+  {% if objetivo.ciclo.tipo == "trimestral" %}
+    <section class="cartao" aria-labelledby="titulo-vinculos">
+      <h2 id="titulo-vinculos">Objetivos anuais vinculados</h2>
+      <p class="texto-suave">Vínculo opcional: indica para quais objetivos de {{ objetivo.ciclo.ano }} este objetivo trimestral contribui.</p>
+      {% if vinculos.anuais %}
+        <ul class="lista-simples">
+          {% for vinculo in vinculos.anuais %}
+            <li class="lista-simples__com-acao">
+              <a href="{% url 'okrs:objetivo_detalhe' vinculo.objetivo_anual.pk %}">{{ vinculo.objetivo_anual.titulo }}</a>
+              <form method="post" action="{% url 'okrs:objetivo_desvincular' objetivo.pk vinculo.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="botao botao--pequeno">Remover vínculo</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+      {% if form_vinculo.fields.objetivo_anual.queryset.exists %}
+        <form method="post" action="{% url 'okrs:objetivo_vincular' objetivo.pk %}" class="filtros">
+          {% csrf_token %}
+          <label>Vincular a
+            {{ form_vinculo.objetivo_anual }}
+          </label>
+          <button type="submit" class="botao">Vincular</button>
+        </form>
+      {% elif not vinculos.anuais %}
+        <p class="texto-suave">Não há objetivos no ciclo anual {{ objetivo.ciclo.ano }} desta empresa para vincular.</p>
+      {% endif %}
+    </section>
+  {% else %}
+    <section class="cartao" aria-labelledby="titulo-vinculos">
+      <h2 id="titulo-vinculos">Objetivos trimestrais vinculados</h2>
+      {% if vinculos.trimestrais %}
+        <ul class="lista-simples">
+          {% for vinculo in vinculos.trimestrais %}
+            <li><span class="selo selo--neutro">{{ vinculo.objetivo_trimestral.ciclo.rotulo }}</span> <a href="{% url 'okrs:objetivo_detalhe' vinculo.objetivo_trimestral.pk %}">{{ vinculo.objetivo_trimestral.titulo }}</a></li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="texto-suave">Nenhum objetivo trimestral vinculado. O vínculo é feito na tela do objetivo trimestral.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% include "core/_historico.html" %}
+{% endblock %}
