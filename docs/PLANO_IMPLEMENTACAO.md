@@ -315,6 +315,7 @@ Regras:
 | R-13 | Backups com dados sensíveis em local inseguro | Vazamento | Pasta fora do repositório, acesso restrito e criptografia obrigatória (Q-18) |
 | R-16 | Perda da chave de criptografia dos backups | Backups irrecuperáveis | Guardar a chave também fora da máquina (gerenciador de senhas); restauração testada com a chave guardada |
 | R-17 | KRs em vermelho no início do ciclo serem lidos como problema | Leitura equivocada | A cor mede a distância até a meta (Q-12); a situação informada no check-in aparece junto |
+| R-18 | Smart App Control do Windows (ativo nesta máquina) bloqueia DLLs sem reputação: a `cryptography` 50.0.2 foi bloqueada | Atualização de dependência compilada quebra a aplicação localmente | `cryptography` fixada em 50.0.1 (carrega normalmente); antes de atualizar qualquer dependência compilada, verificar se ela carrega nesta máquina. Não desativar a proteção |
 | R-14 | Uso do Supabase contornando o Django (cliente no navegador) | Falha de isolamento | Supabase apenas como PostgreSQL; chave `service_role` nunca exposta |
 | R-15 | Expansão de escopo (pedidos fora do plano) | Atraso, qualidade | Novas demandas registradas e encaixadas em etapas validadas |
 

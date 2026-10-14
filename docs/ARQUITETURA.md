@@ -126,6 +126,33 @@ Regras transversais:
 - **Django Admin** [Recomendação]: não habilitado para entidades de negócio, porque contornaria services, auditoria e escopo. Pode ser usado somente leitura em desenvolvimento, se útil.
 - **SQL específico de banco** fica isolado em `apps/core/banco/` (por exemplo, o backup SQLite), atrás de uma interface por motor.
 
+### 3.2.1. Padrão de services (implementado na E2)
+
+Os módulos de negócio usam as funções genéricas de `apps/core/services.py`, que já garantem validação (`full_clean`), bloqueio otimista, auditoria na mesma transação e arquivamento em vez de exclusão:
+
+```python
+# apps/<modulo>/services.py — exemplo do padrão
+from apps.core import services
+from apps.core.acesso import Ator, EscopoAcesso
+from apps.core.erros import AcessoNegado
+
+
+def alterar_empresa(empresa_id: int, dados: dict, *, versao: int, ator: Ator, escopo: EscopoAcesso):
+    if not escopo.permite(empresa_id):
+        raise AcessoNegado()
+    empresa = Empresa.objects.get(pk=empresa_id)
+    return services.atualizar(
+        empresa, dados, versao_esperada=versao, ator=ator, empresa_id=empresa_id
+    )
+
+
+# apps/<modulo>/selectors.py — consultas sempre filtradas pelo escopo
+def listar_objetivos(escopo: EscopoAcesso):
+    return escopo.filtrar(Objetivo.objects.all(), campo="empresa_id")
+```
+
+A view recebe `versao` de um campo oculto do formulário. Em `ConflitoDeVersao`, a tela informa que o registro foi alterado por outra pessoa. Erros de negócio não tratados pela view são convertidos em página amigável (400/409) pelo `ErroDeNegocioMiddleware`; erros inesperados geram a página 500 em pt-BR e são registrados em log.
+
 ### 3.3. Multiempresa (isolamento de dados) [Recomendação]
 
 - Modelo **banco compartilhado, coluna de empresa**: `Objetivo.empresa` é obrigatório; KRs, iniciativas, check-ins e atualizações herdam a empresa pelo objetivo. Registros de auditoria guardam `empresa_id` desnormalizado para permitir filtragem.

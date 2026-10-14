@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "apps.core",
     "apps.contas",
+    "apps.auditoria",
 ]
 
 MIDDLEWARE = [
@@ -31,6 +32,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.ErroDeNegocioMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -83,3 +85,25 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 X_FRAME_OPTIONS = "DENY"
 SESSION_COOKIE_HTTPONLY = True
+
+# Backup (ver docs/ARQUITETURA.md §11). A pasta deve ficar fora do repositório.
+OKR_BACKUP_DIR = env.texto("OKR_BACKUP_DIR")
+OKR_BACKUP_CHAVE = env.texto("OKR_BACKUP_CHAVE")
+OKR_BACKUP_RETENCAO = env.inteiro("OKR_BACKUP_RETENCAO", 30)
+
+# Logs: console em todos os ambientes; dev acrescenta arquivo em var/logs.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "padrao": {"format": "{asctime} {levelname} {name}: {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "padrao"},
+    },
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "okr": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+    },
+}

@@ -2,3 +2,6 @@
 Django==5.2.18
 dj-database-url==3.1.2
 python-dotenv==1.2.4
+# 50.0.2 é bloqueada pelo Smart App Control do Windows nesta máquina (sem reputação ainda);
+# antes de atualizar, verificar se a nova versão carrega localmente (ver PLANO, risco R-18).
+cryptography==50.0.1

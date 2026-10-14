@@ -43,6 +43,18 @@ def booleano(nome: str, padrao: bool = False) -> bool:
     raise ImproperlyConfigured(f"Valor inválido para {nome}: {valor!r} (use true ou false).")
 
 
+def inteiro(nome: str, padrao: int) -> int:
+    valor = texto(nome)
+    if not valor:
+        return padrao
+    try:
+        return int(valor)
+    except ValueError as exc:
+        raise ImproperlyConfigured(
+            f"Valor inválido para {nome}: {valor!r} (use um número inteiro)."
+        ) from exc
+
+
 def lista(nome: str, padrao: str = "") -> list[str]:
     return [item.strip() for item in texto(nome, padrao).split(",") if item.strip()]
 
