@@ -47,7 +47,7 @@
   <section class="cartao" aria-labelledby="titulo-pessoas">
     <div class="cabecalho-secao">
       <h2 id="titulo-pessoas">Pessoas vinculadas</h2>
-      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:pessoa_nova' %}?empresa={{ empresa.pk }}">Nova pessoa nesta empresa</a>{% endif %}
+      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:pessoa_nova' %}?empresa={{ empresa.pk }}">{% include "_icone.html" with nome="mais" %}Nova pessoa nesta empresa</a>{% endif %}
     </div>
     {% if pessoas %}
       <ul class="lista-simples">
@@ -67,7 +67,7 @@
   <section class="cartao" aria-labelledby="titulo-ciclos">
     <div class="cabecalho-secao">
       <h2 id="titulo-ciclos">Ciclos</h2>
-      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:ciclo_anual_novo' %}?empresa={{ empresa.pk }}">Novo ciclo anual</a>{% endif %}
+      {% if not empresa.arquivado %}<a class="botao" href="{% url 'cadastros:ciclo_anual_novo' %}?empresa={{ empresa.pk }}">{% include "_icone.html" with nome="mais" %}Novo ciclo anual</a>{% endif %}
     </div>
     {% if ciclos %}
       <table class="tabela tabela--compacta">

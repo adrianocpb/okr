@@ -4,11 +4,14 @@
 
 {% block conteudo %}
   <div class="cabecalho-pagina">
-    <h1>Painel de OKRs</h1>
-    <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}">Novo objetivo</a>
+    <div>
+      <h1>Painel de OKRs</h1>
+      {% if periodo_padrao %}<p class="cabecalho-pagina__subtitulo">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Use os filtros de ciclo ou período para ver outros ciclos.</p>{% endif %}
+    </div>
+    <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}">{% include "_icone.html" with nome="mais" %}Novo objetivo</a>
   </div>
 
-  <form method="get" class="filtros" aria-label="Filtrar painel">
+  <form method="get" class="filtros cartao" aria-label="Filtrar painel">
     <label>Empresa
       <select name="empresa">
         <option value="">Todas</option>
@@ -35,83 +38,110 @@
         {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == filtro.situacao_kr %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
       </select>
     </label>
-    <button type="submit" class="botao">Filtrar</button>
-    {% if filtrado %}<a href="{% url 'painel:painel' %}">Limpar filtros</a>{% endif %}
+    <div class="filtros__acoes">
+      <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+      {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'painel:painel' %}">Limpar filtros</a>{% endif %}
+    </div>
   </form>
-  {% if periodo_padrao %}<p class="texto-suave">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Use os filtros de ciclo ou período para ver outros ciclos.</p>{% endif %}
 
   <section class="resumo" aria-label="Resumo">
-    <div class="resumo__cartao"><span class="resumo__numero">{{ painel.total_objetivos }}</span> objetivo{{ painel.total_objetivos|pluralize }}</div>
-    <div class="resumo__cartao"><span class="resumo__numero">{{ painel.distribuicao.total }}</span> KR{{ painel.distribuicao.total|pluralize }}</div>
+    <div class="resumo__cartao">
+      <span class="caixa-icone caixa-icone--primaria">{% include "_icone.html" with nome="alvo" %}</span>
+      <div><span class="resumo__numero">{{ painel.total_objetivos }}</span> <span class="resumo__rotulo">objetivo{{ painel.total_objetivos|pluralize }}</span></div>
+    </div>
+    <div class="resumo__cartao">
+      <span class="caixa-icone caixa-icone--info">{% include "_icone.html" with nome="grafico" %}</span>
+      <div><span class="resumo__numero">{{ painel.distribuicao.total }}</span> <span class="resumo__rotulo">KR{{ painel.distribuicao.total|pluralize }}</span></div>
+    </div>
+    <div class="resumo__cartao">
+      <span class="caixa-icone {% if painel.alertas %}caixa-icone--perigo{% else %}caixa-icone--neutra{% endif %}">{% include "_icone.html" with nome="alerta" %}</span>
+      <div><span class="resumo__numero">{{ painel.alertas|length }}</span> <span class="resumo__rotulo">alerta{{ painel.alertas|length|pluralize }}</span></div>
+    </div>
     <div class="resumo__cartao resumo__cartao--largo">
-      <span class="texto-suave">KRs por situação</span>
+      <span class="resumo__titulo">KRs por situação</span>
+      {% include "painel/_barra_distribuicao.html" with distribuicao=painel.distribuicao %}
       {% include "painel/_distribuicao.html" with distribuicao=painel.distribuicao %}
     </div>
-    <div class="resumo__cartao"><span class="resumo__numero{% if painel.alertas %} resumo__numero--alerta{% endif %}">{{ painel.alertas|length }}</span> alerta{{ painel.alertas|length|pluralize }}</div>
   </section>
-  <p class="texto-suave">Os KRs são contados por situação; percentuais de KRs diferentes não são somados nem tirados em média.</p>
+  <p class="nota">Os KRs são contados por situação; percentuais de KRs diferentes não são somados nem tirados em média.</p>
 
-  <section class="cartao" aria-labelledby="titulo-alertas">
-    <h2 id="titulo-alertas">Precisa de atenção</h2>
-    {% if alertas %}
-      <ul class="alertas">
-        {% for alerta in alertas %}
-          <li class="alerta alerta--{% if alerta.gravidade == 1 %}alta{% elif alerta.gravidade == 2 %}media{% else %}baixa{% endif %}">
-            <span class="alerta__tipo">{{ alerta.tipo }}</span>
-            <span class="selo selo--neutro">{{ alerta.empresa }}</span>
-            <a href="{{ alerta.url }}">{{ alerta.texto }}</a>
-          </li>
-        {% endfor %}
-      </ul>
-      {% if alertas_ocultos %}<p class="texto-suave">E mais {{ alertas_ocultos }} alerta{{ alertas_ocultos|pluralize }}. Refine os filtros para vê-los.</p>{% endif %}
-    {% else %}
-      <p class="texto-suave">Nenhum alerta para os filtros selecionados.</p>
-    {% endif %}
-  </section>
+  <div class="painel-grade">
+    <section class="cartao painel-grade__alertas" aria-labelledby="titulo-alertas">
+      <div class="cartao__cabecalho">
+        <div>
+          <h2 id="titulo-alertas" class="cartao__titulo">Precisa de atenção</h2>
+          <p class="cartao__subtitulo">{% if alertas %}{{ painel.alertas|length }} alerta{{ painel.alertas|length|pluralize }} nos filtros atuais{% else %}Tudo em dia{% endif %}</p>
+        </div>
+      </div>
+      {% if alertas %}
+        <ul class="alertas">
+          {% for alerta in alertas %}
+            <li class="alerta alerta--{% if alerta.gravidade == 1 %}alta{% elif alerta.gravidade == 2 %}media{% else %}baixa{% endif %}">
+              <div class="alerta__topo">
+                <span class="alerta__tipo">{{ alerta.tipo }}</span>
+                <span class="selo selo--neutro">{{ alerta.empresa }}</span>
+              </div>
+              <a href="{{ alerta.url }}">{{ alerta.texto }}</a>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if alertas_ocultos %}<p class="nota">E mais {{ alertas_ocultos }} alerta{{ alertas_ocultos|pluralize }}. Refine os filtros para vê-los.</p>{% endif %}
+      {% else %}
+        <p class="texto-suave">Nenhum alerta para os filtros selecionados.</p>
+      {% endif %}
+    </section>
 
-  <h2>Objetivos</h2>
-  {% if pagina.object_list %}
-    {% for cartao in pagina.object_list %}
-      {% with objetivo=cartao.objetivo %}
-        <article class="cartao objetivo-cartao">
-          <div class="cabecalho-secao">
-            <div>
-              <span class="selo selo--neutro">{{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}</span>
-              {% include "okrs/_status.html" %}
-              <h3 class="objetivo-cartao__titulo"><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a></h3>
-              <p class="texto-suave">Owner: {{ objetivo.owner.nome }} · Sponsor: {{ objetivo.sponsor.nome }}</p>
-            </div>
-            <div class="objetivo-cartao__situacao">
-              {% if cartao.distribuicao.mais_critica %}
-                <span class="texto-suave">Situação mais crítica</span>
-                <span class="situacao-kr situacao-kr--{{ cartao.distribuicao.mais_critica.0 }}">{{ cartao.distribuicao.mais_critica.1 }}</span>
+    <section class="painel-grade__objetivos" aria-labelledby="titulo-objetivos">
+      <div class="cabecalho-secao">
+        <h2 id="titulo-objetivos">Objetivos</h2>
+        {% if pagina.object_list %}<span class="texto-suave">{{ pagina.paginator.count }} no total</span>{% endif %}
+      </div>
+      {% if pagina.object_list %}
+        {% for cartao in pagina.object_list %}
+          {% with objetivo=cartao.objetivo %}
+            <article class="cartao objetivo-cartao">
+              <div class="objetivo-cartao__cabecalho">
+                <div class="objetivo-cartao__identificacao">
+                  <div class="objetivo-cartao__selos">
+                    <span class="selo selo--neutro">{{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}</span>
+                    {% include "okrs/_status.html" %}
+                  </div>
+                  <h3 class="objetivo-cartao__titulo"><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a></h3>
+                  <p class="objetivo-cartao__pessoas">Owner: {{ objetivo.owner.nome }} · Sponsor: {{ objetivo.sponsor.nome }}</p>
+                </div>
+                <div class="objetivo-cartao__situacao">
+                  {% if cartao.distribuicao.mais_critica %}
+                    <span class="objetivo-cartao__rotulo">Situação mais crítica</span>
+                    <span class="situacao-kr situacao-kr--{{ cartao.distribuicao.mais_critica.0 }}">{{ cartao.distribuicao.mais_critica.1 }}</span>
+                  {% endif %}
+                  {% include "painel/_distribuicao.html" with distribuicao=cartao.distribuicao %}
+                </div>
+              </div>
+              {% if cartao.krs %}
+                <table class="tabela tabela--compacta tabela--krs">
+                  <tbody>
+                    {% for kr in cartao.krs %}
+                      <tr>
+                        <td><a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo }}</a> <span class="texto-suave">· {{ kr.responsavel.nome }}</span></td>
+                        <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
+                        <td class="tabela__selos">
+                          {% if kr.situacao.status %}{% include "acompanhamento/_status_checkin.html" with status=kr.situacao.status rotulo=kr.situacao.status_rotulo %}{% endif %}
+                          {% if kr.situacao.atrasado %}<span class="selo selo--alerta">Check-in atrasado</span>{% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              {% else %}
+                <p class="texto-suave objetivo-cartao__vazio">Nenhum KR cadastrado.</p>
               {% endif %}
-              {% include "painel/_distribuicao.html" with distribuicao=cartao.distribuicao %}
-            </div>
-          </div>
-          {% if cartao.krs %}
-            <table class="tabela tabela--compacta tabela--krs">
-              <tbody>
-                {% for kr in cartao.krs %}
-                  <tr>
-                    <td><a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo }}</a> <span class="texto-suave">· {{ kr.responsavel.nome }}</span></td>
-                    <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
-                    <td>
-                      {% if kr.situacao.status %}{% include "acompanhamento/_status_checkin.html" with status=kr.situacao.status rotulo=kr.situacao.status_rotulo %}{% endif %}
-                      {% if kr.situacao.atrasado %}<span class="selo selo--alerta">Check-in atrasado</span>{% endif %}
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% else %}
-            <p class="texto-suave">Nenhum KR cadastrado.</p>
-          {% endif %}
-        </article>
-      {% endwith %}
-    {% endfor %}
-    {% include "core/_paginacao.html" %}
-  {% else %}
-    <p class="vazio">Nenhum objetivo encontrado para os filtros selecionados.{% if periodo_padrao %} <a href="{% url 'okrs:objetivo_lista' %}">Ver todos os objetivos</a>.{% endif %}</p>
-  {% endif %}
+            </article>
+          {% endwith %}
+        {% endfor %}
+        {% include "core/_paginacao.html" %}
+      {% else %}
+        <p class="vazio">Nenhum objetivo encontrado para os filtros selecionados.{% if periodo_padrao %} <a href="{% url 'okrs:objetivo_lista' %}">Ver todos os objetivos</a>.{% endif %}</p>
+      {% endif %}
+    </section>
+  </div>
 {% endblock %}

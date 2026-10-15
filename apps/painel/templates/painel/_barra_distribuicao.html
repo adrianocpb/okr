@@ -1,0 +1,6 @@
+{# Barra empilhada com a contagem de KRs por situação (proporção de contagens, nunca média de percentuais). Espera `distribuicao`. Decorativa: os números estão na lista ao lado. #}
+{% if distribuicao.itens %}
+  <div class="barra-situacao" aria-hidden="true">
+    {% for codigo, rotulo, quantidade in distribuicao.itens %}<span class="barra-situacao__parte barra-situacao__parte--{{ codigo }}" style="flex-grow: {{ quantidade }}" title="{{ quantidade }} {{ rotulo|lower }}"></span>{% endfor %}
+  </div>
+{% endif %}

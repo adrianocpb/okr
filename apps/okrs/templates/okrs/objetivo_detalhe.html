@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load okrs_formato %}
+{% load l10n okrs_formato %}
 
 {% block titulo %}{{ objetivo.titulo|truncatechars:60 }}{% endblock %}
 
@@ -44,7 +44,7 @@
   <section class="cartao" aria-labelledby="titulo-krs">
     <div class="cabecalho-secao">
       <h2 id="titulo-krs">Resultados-chave (KRs)</h2>
-      {% if not objetivo.encerrado %}<a class="botao botao--primario" href="{% url 'okrs:kr_novo' objetivo.pk %}">Novo KR</a>{% endif %}
+      {% if not objetivo.encerrado %}<a class="botao botao--primario" href="{% url 'okrs:kr_novo' objetivo.pk %}">{% include "_icone.html" with nome="mais" %}Novo KR</a>{% endif %}
     </div>
     {% if krs %}
       <p class="texto-suave">Cada KR tem sua própria medida e seu próprio progresso; os percentuais não são somados entre KRs.</p>
@@ -74,7 +74,7 @@
   <section class="cartao" aria-labelledby="titulo-iniciativas">
     <div class="cabecalho-secao">
       <h2 id="titulo-iniciativas">Iniciativas</h2>
-      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}">Nova iniciativa</a>{% endif %}
+      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}">{% include "_icone.html" with nome="mais" %}Nova iniciativa</a>{% endif %}
     </div>
     {% if iniciativas %}
       <table class="tabela tabela--compacta">
@@ -99,7 +99,7 @@
   {% if objetivo.ciclo.tipo == "trimestral" %}
     <section class="cartao" aria-labelledby="titulo-vinculos">
       <h2 id="titulo-vinculos">Objetivos anuais vinculados</h2>
-      <p class="texto-suave">Vínculo opcional: indica para quais objetivos de {{ objetivo.ciclo.ano }} este objetivo trimestral contribui.</p>
+      <p class="texto-suave">Vínculo opcional: indica para quais objetivos de {{ objetivo.ciclo.ano|unlocalize }} este objetivo trimestral contribui.</p>
       {% if vinculos.anuais %}
         <ul class="lista-simples">
           {% for vinculo in vinculos.anuais %}
@@ -122,7 +122,7 @@
           <button type="submit" class="botao">Vincular</button>
         </form>
       {% elif not vinculos.anuais %}
-        <p class="texto-suave">Não há objetivos no ciclo anual {{ objetivo.ciclo.ano }} desta empresa para vincular.</p>
+        <p class="texto-suave">Não há objetivos no ciclo anual {{ objetivo.ciclo.ano|unlocalize }} desta empresa para vincular.</p>
       {% endif %}
     </section>
   {% else %}

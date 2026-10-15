@@ -3,7 +3,9 @@
 {% block titulo %}Operação não realizada{% endblock %}
 
 {% block conteudo %}
-  <h1>Operação não realizada</h1>
-  <p class="aviso" role="alert">{{ mensagem }}</p>
-  <p>Use o botão Voltar do navegador para retornar à tela anterior, ou <a href="{% url 'painel:painel' %}">vá para o início</a>.</p>
+  <section class="cartao pagina-erro">
+    <h1>Operação não realizada</h1>
+    <p class="aviso" role="alert">{{ mensagem }}</p>
+    <p>Use o botão Voltar do navegador para retornar à tela anterior, ou <a href="{% url 'painel:painel' %}">vá para o início</a>.</p>
+  </section>
 {% endblock %}

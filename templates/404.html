@@ -3,7 +3,9 @@
 {% block titulo %}Página não encontrada{% endblock %}
 
 {% block conteudo %}
-  <h1>Página não encontrada</h1>
-  <p>O endereço acessado não existe ou o registro não está disponível para você.</p>
-  <p><a href="{% url 'painel:painel' %}">Voltar ao início</a></p>
+  <section class="cartao pagina-erro">
+    <h1>Página não encontrada</h1>
+    <p>O endereço acessado não existe ou o registro não está disponível para você.</p>
+    <p><a class="botao botao--primario" href="{% url 'painel:painel' %}">Voltar ao início</a></p>
+  </section>
 {% endblock %}

@@ -27,8 +27,8 @@
     </label>
     <label>De <input type="date" name="de" value="{{ filtros.de }}"></label>
     <label>Até <input type="date" name="ate" value="{{ filtros.ate }}"></label>
-    <button type="submit" class="botao">Filtrar</button>
-    {% if filtrado %}<a href="{% url 'auditoria:auditoria_lista' %}">Limpar filtros</a>{% endif %}
+    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'auditoria:auditoria_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
   {% if entradas %}
