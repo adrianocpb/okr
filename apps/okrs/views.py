@@ -32,11 +32,13 @@ def objetivo_lista(request):
         status=filtros["status"],
         busca=filtros["busca"],
     )
+    pagina_atual = _pagina(request, objetivos)
+    selectors.detalhar_objetivos(pagina_atual.object_list)
     return render(
         request,
         "okrs/objetivo_lista.html",
         {
-            "pagina": _pagina(request, objetivos),
+            "pagina": pagina_atual,
             "filtros": filtros,
             "filtrado": any(filtros.values()),
             "empresa_id": empresa_id,

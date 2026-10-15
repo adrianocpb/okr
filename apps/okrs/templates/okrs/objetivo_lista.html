@@ -1,6 +1,8 @@
 {% extends "base.html" %}
+{% load static okrs_formato %}
 
-{% block titulo %}Objetivos{% endblock %}
+{% block titulo %}Objetivos  <script src="{% static 'js/objetivos_lista.js' %}" defer></script>
+{% endblock %}
 
 {% block conteudo %}
   <div class="cabecalho-pagina">
@@ -34,30 +36,77 @@
   </form>
 
   {% if pagina.object_list %}
-    <table class="tabela">
-      <thead>
-        <tr>
-          <th scope="col">Objetivo</th>
-          <th scope="col">Empresa</th>
-          <th scope="col">Ciclo</th>
-          <th scope="col">Owner</th>
-          <th scope="col">Sponsor</th>
-          <th scope="col">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for objetivo in pagina.object_list %}
-          <tr>
-            <td><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}"><strong>{{ objetivo.titulo }}</strong></a></td>
-            <td>{{ objetivo.empresa.sigla }}</td>
-            <td>{{ objetivo.ciclo.rotulo }}</td>
-            <td>{{ objetivo.owner.nome }}</td>
-            <td>{{ objetivo.sponsor.nome }}</td>
-            <td>{% include "okrs/_status.html" %}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="acoes acoes--lista" data-controles-expansao hidden>
+      <button type="button" class="botao botao--pequeno" data-expandir-todos>Expandir todos</button>
+      <button type="button" class="botao botao--pequeno" data-recolher-todos>Recolher todos</button>
+    </div>
+    <div class="lista-objetivos">
+      {% for objetivo in pagina.object_list %}
+        <details class="objetivo-linha" data-objetivo="{{ objetivo.pk }}">
+          <summary class="objetivo-linha__resumo">
+            <span class="objetivo-linha__titulo">{{ objetivo.titulo }}</span>
+            <span class="objetivo-linha__meta">
+              <span class="selo selo--neutro">{{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}</span>
+              <span class="texto-suave">Owner: {{ objetivo.owner.nome }} · Sponsor: {{ objetivo.sponsor.nome }}</span>
+              <span class="texto-suave">{{ objetivo.krs_lista|length }} KR{{ objetivo.krs_lista|length|pluralize }} · {{ objetivo.iniciativas_lista|length }} iniciativa{{ objetivo.iniciativas_lista|length|pluralize }}</span>
+              {% include "okrs/_status.html" %}
+            </span>
+          </summary>
+
+          <div class="objetivo-linha__conteudo">
+            <p><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">Abrir o objetivo</a></p>
+
+            <h3 class="objetivo-linha__secao">Resultados-chave</h3>
+            {% if objetivo.krs_lista %}
+              <table class="tabela tabela--compacta">
+                <thead><tr><th scope="col">KR</th><th scope="col">Último check-in</th><th scope="col">Resultado</th><th scope="col">Evolução</th></tr></thead>
+                <tbody>
+                  {% for kr in objetivo.krs_lista %}
+                    <tr>
+                      <td>
+                        <a href="{% url 'okrs:kr_detalhe' kr.pk %}"><strong>{{ kr.titulo }}</strong></a>
+                        <div class="texto-suave">{{ kr.responsavel.nome }}{% if kr.status != "ativo" %} · {{ kr.get_status_display }}{% endif %}</div>
+                      </td>
+                      <td>
+                        {% if kr.situacao.data_ultimo_checkin %}
+                          {{ kr.situacao.data_ultimo_checkin|date:"d/m/Y" }}
+                          <div>{% include "acompanhamento/_status_checkin.html" with status=kr.situacao.status rotulo=kr.situacao.status_rotulo %}</div>
+                        {% else %}<span class="texto-suave">Nenhum</span>{% endif %}
+                        {% if kr.situacao.atrasado %}<div><span class="selo selo--alerta">Atrasado</span></div>{% endif %}
+                      </td>
+                      <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
+                      <td>{% if kr.mini_grafico %}{% include "acompanhamento/_mini_grafico.html" %}{% else %}<span class="texto-suave">Sem check-ins</span>{% endif %}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <p class="texto-suave">Nenhum KR cadastrado.</p>
+            {% endif %}
+
+            <h3 class="objetivo-linha__secao">Iniciativas</h3>
+            {% if objetivo.iniciativas_lista %}
+              <table class="tabela tabela--compacta">
+                <thead><tr><th scope="col">Iniciativa</th><th scope="col">Responsável</th><th scope="col">Prazo</th><th scope="col">KRs</th><th scope="col">Status</th></tr></thead>
+                <tbody>
+                  {% for iniciativa in objetivo.iniciativas_lista %}
+                    <tr>
+                      <td><a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo }}</a></td>
+                      <td>{{ iniciativa.responsavel.nome }}</td>
+                      <td>{{ iniciativa.prazo|date:"d/m/Y"|default:"—" }}</td>
+                      <td>{% for kr in iniciativa.krs.all %}{{ kr.titulo }}{% if not forloop.last %}; {% endif %}{% empty %}<span class="texto-suave">Objetivo</span>{% endfor %}</td>
+                      <td>{% include "okrs/_iniciativa_status.html" %}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <p class="texto-suave">Nenhuma iniciativa cadastrada.</p>
+            {% endif %}
+          </div>
+        </details>
+      {% endfor %}
+    </div>
     {% include "core/_paginacao.html" %}
   {% else %}
     <p class="vazio">
@@ -65,4 +114,5 @@
       {% else %}Nenhum objetivo cadastrado ainda. <a href="{% url 'okrs:objetivo_novo' %}">Cadastre o primeiro objetivo</a>.{% endif %}
     </p>
   {% endif %}
+  <script src="{% static 'js/objetivos_lista.js' %}" defer></script>
 {% endblock %}

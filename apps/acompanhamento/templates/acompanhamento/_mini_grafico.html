@@ -1,0 +1,14 @@
+{# Mini gráfico de evolução do KR (sem eixos). Espera `kr` com `serie` e `mini_grafico`. #}
+{% with desenho=kr.mini_grafico serie=kr.serie %}
+  <svg viewBox="0 0 {{ desenho.largura }} {{ desenho.altura }}" class="mini-grafico" role="img"
+       aria-label="Evolução: {{ serie.pontos|length }} check-in{{ serie.pontos|length|pluralize }}{% with ultimo=serie.pontos|last %}, último {{ ultimo.rotulo }} em {{ ultimo.data|date:'d/m/Y' }}{% endwith %}">
+    {% for posicao, referencia in desenho.referencias %}
+      <line x1="4" x2="{{ desenho.largura|add:'-4' }}" y1="{{ posicao|stringformat:'s' }}" y2="{{ posicao|stringformat:'s' }}" class="grafico__referencia"><title>{{ referencia.rotulo }}</title></line>
+    {% endfor %}
+    {% if desenho.hoje_x is not None %}<line x1="{{ desenho.hoje_x|stringformat:'s' }}" x2="{{ desenho.hoje_x|stringformat:'s' }}" y1="2" y2="{{ desenho.altura|add:'-2' }}" class="grafico__hoje"/>{% endif %}
+    {% if desenho.pontos|length > 1 %}<polyline points="{{ desenho.linha }}" class="grafico__linha"/>{% endif %}
+    {% for px, py, ponto in desenho.pontos %}
+      <circle cx="{{ px|stringformat:'s' }}" cy="{{ py|stringformat:'s' }}" r="3" class="grafico__ponto"><title>{{ ponto.data|date:"d/m/Y" }}: {{ ponto.rotulo }} ({{ ponto.status }})</title></circle>
+    {% endfor %}
+  </svg>
+{% endwith %}

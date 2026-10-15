@@ -237,3 +237,40 @@ def desdobramento_trimestral(objetivo: Objetivo) -> list[dict]:
             }
         )
     return colunas
+
+
+# ------------------------------------------- lista de objetivos expansível
+
+
+def detalhar_objetivos(objetivos, hoje: date | None = None) -> None:
+    """Preenche, em lote, `objetivo.krs_lista` (com situação, série e mini gráfico) e
+    `objetivo.iniciativas_lista` (com atraso) para os objetivos exibidos."""
+    from apps.acompanhamento.grafico import desenhar, series_em_lote
+    from apps.acompanhamento.selectors import situacoes_em_lote
+
+    hoje = hoje or timezone.localdate()
+    objetivos = list(objetivos)
+    por_id = {objetivo.pk: objetivo for objetivo in objetivos}
+    krs = list(
+        ResultadoChave.objects.filter(objetivo_id__in=list(por_id))
+        .select_related("responsavel")
+        .order_by("id")
+    )
+    for kr in krs:
+        kr.objetivo = por_id[kr.objetivo_id]
+    situacoes_em_lote(krs, hoje)
+    series = series_em_lote(krs)
+    for kr in krs:
+        kr.serie = series[kr.pk]
+        kr.mini_grafico = desenhar(kr.serie, hoje, compacto=True) if kr.serie.pontos else None
+
+    iniciativas = _marcar_atraso(
+        Iniciativa.objects.filter(objetivo_id__in=list(por_id))
+        .select_related("responsavel")
+        .prefetch_related("krs")
+        .order_by(F("prazo").asc(nulls_last=True), "id"),
+        hoje,
+    )
+    for objetivo in objetivos:
+        objetivo.krs_lista = [kr for kr in krs if kr.objetivo_id == objetivo.pk]
+        objetivo.iniciativas_lista = [i for i in iniciativas if i.objetivo_id == objetivo.pk]
