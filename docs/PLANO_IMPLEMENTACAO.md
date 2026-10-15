@@ -165,7 +165,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E7 — Check-ins ✅ (aguardando validação)
+### E7 — Check-ins ✅
 
 **Objetivo:** registro de acompanhamento com histórico imutável.
 **Dependências:** E6.
@@ -181,7 +181,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E8 — Iniciativas e acompanhamento da execução
+### E8 — Iniciativas e acompanhamento da execução ✅ (aguardando validação)
 
 **Objetivo:** ações vinculadas a objetivos/KRs, com acompanhamento.
 **Dependências:** E6 (pode correr em paralelo com E7).

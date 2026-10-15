@@ -1,5 +1,6 @@
 """Regras de gravação de objetivos e de seus vínculos."""
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Max
 
@@ -12,7 +13,14 @@ from apps.core.acesso import Ator, EscopoAcesso
 from apps.core.erros import ErroDeNegocio
 from apps.core.texto import espacos_simples
 from apps.okrs import selectors
-from apps.okrs.models import Marco, Objetivo, ResultadoChave, VinculoObjetivo
+from apps.okrs.models import (
+    Iniciativa,
+    IniciativaKR,
+    Marco,
+    Objetivo,
+    ResultadoChave,
+    VinculoObjetivo,
+)
 
 Acao = RegistroAlteracao.Acao
 
@@ -193,3 +201,87 @@ def remover_marco(marco_id: int, *, ator: Ator, escopo: EscopoAcesso) -> None:
         alteracoes={"marco": {"antes": str(marco), "depois": None}},
     )
     marco.delete()
+
+
+# ------------------------------------------------------------- iniciativas
+
+CAMPOS_INICIATIVA = ("titulo", "descricao", "responsavel", "prazo", "status")
+
+
+def _dados_iniciativa(dados: dict) -> dict:
+    filtrados = {k: v for k, v in dados.items() if k in CAMPOS_INICIATIVA}
+    if isinstance(filtrados.get("responsavel"), int):
+        filtrados["responsavel"] = Pessoa.objects.get(pk=filtrados["responsavel"])
+    return filtrados
+
+
+def _krs_do_objetivo(objetivo: Objetivo, kr_ids) -> dict[int, ResultadoChave]:
+    ids = set(kr_ids or [])
+    krs = {kr.pk: kr for kr in objetivo.krs.filter(pk__in=ids)}
+    if set(krs) != ids:
+        raise ValidationError({"krs": "Selecione apenas KRs do mesmo objetivo da iniciativa."})
+    return krs
+
+
+def _registrar_vinculo_kr(iniciativa: Iniciativa, kr: ResultadoChave, acao: str, ator: Ator):
+    criando = acao == Acao.VINCULO
+    registrar_alteracao(
+        objeto=iniciativa,
+        acao=acao,
+        ator=ator,
+        alteracoes={
+            "kr": {
+                "antes": None if criando else kr.titulo,
+                "depois": kr.titulo if criando else None,
+            }
+        },
+    )
+
+
+@transaction.atomic
+def criar_iniciativa(
+    *, objetivo_id: int, dados: dict, kr_ids=(), ator: Ator, escopo: EscopoAcesso
+) -> Iniciativa:
+    objetivo = selectors.obter_objetivo(escopo, objetivo_id)
+    if objetivo.encerrado:
+        raise ErroDeNegocio("Objetivo concluído ou cancelado não recebe novas iniciativas.")
+    krs = _krs_do_objetivo(objetivo, kr_ids)
+    iniciativa = services.criar(
+        Iniciativa(objetivo=objetivo, **_dados_iniciativa(dados)), ator=ator
+    )
+    for kr in sorted(krs.values(), key=lambda k: k.pk):
+        IniciativaKR.objects.create(iniciativa=iniciativa, kr=kr)
+        _registrar_vinculo_kr(iniciativa, kr, Acao.VINCULO, ator)
+    return iniciativa
+
+
+@transaction.atomic
+def atualizar_iniciativa(
+    iniciativa_id: int,
+    *,
+    dados: dict,
+    kr_ids=None,
+    versao: int,
+    ator: Ator,
+    escopo: EscopoAcesso,
+) -> Iniciativa:
+    """Atualiza dados e, se `kr_ids` for informado, os KRs ligados. O objetivo não muda."""
+    iniciativa = selectors.obter_iniciativa(escopo, iniciativa_id)
+    versao_antes = iniciativa.versao
+    iniciativa = services.atualizar(
+        iniciativa, _dados_iniciativa(dados), versao_esperada=versao, ator=ator
+    )
+    if kr_ids is None:
+        return iniciativa
+    novos = _krs_do_objetivo(iniciativa.objetivo, kr_ids)
+    atuais = {v.kr_id: v.kr for v in iniciativa.vinculos_kr.select_related("kr")}
+    adicionar, remover = set(novos) - set(atuais), set(atuais) - set(novos)
+    if (adicionar or remover) and iniciativa.versao == versao_antes:
+        services.confirmar_versao(iniciativa, versao)
+    for kr_id in sorted(remover):
+        IniciativaKR.objects.filter(iniciativa=iniciativa, kr_id=kr_id).delete()
+        _registrar_vinculo_kr(iniciativa, atuais[kr_id], Acao.DESVINCULO, ator)
+    for kr_id in sorted(adicionar):
+        IniciativaKR.objects.create(iniciativa=iniciativa, kr=novos[kr_id])
+        _registrar_vinculo_kr(iniciativa, novos[kr_id], Acao.VINCULO, ator)
+    return iniciativa

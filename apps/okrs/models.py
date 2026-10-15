@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils import timezone
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.models import ModeloBase
@@ -350,3 +351,107 @@ class Marco(models.Model):
 
     def __str__(self):
         return f"{self.ordem}. {self.descricao}"
+
+
+class Iniciativa(ModeloBase):
+    """Ação ou projeto que contribui para um objetivo e, opcionalmente, para KRs dele.
+
+    Tem um único responsável principal (sem Owner nem Sponsor). Iniciativas
+    representam ações; não alteram o progresso dos KRs, que vem dos check-ins.
+    """
+
+    class Status(models.TextChoices):
+        NAO_INICIADA = "nao_iniciada", "Não iniciada"
+        EM_ANDAMENTO = "em_andamento", "Em andamento"
+        CONCLUIDA = "concluida", "Concluída"
+        CANCELADA = "cancelada", "Cancelada"
+
+    STATUS_ENCERRADOS = frozenset({Status.CONCLUIDA, Status.CANCELADA})
+
+    objetivo = models.ForeignKey(
+        Objetivo, on_delete=models.PROTECT, related_name="iniciativas", verbose_name="objetivo"
+    )
+    titulo = models.CharField("título", max_length=200)
+    descricao = models.TextField("descrição", blank=True)
+    responsavel = models.ForeignKey(
+        Pessoa,
+        on_delete=models.PROTECT,
+        related_name="iniciativas_como_responsavel",
+        verbose_name="responsável",
+    )
+    prazo = models.DateField("prazo", null=True, blank=True)
+    status = models.CharField(
+        "status", max_length=12, choices=Status.choices, default=Status.NAO_INICIADA
+    )
+    data_conclusao = models.DateField("data de conclusão", null=True, blank=True, editable=False)
+    krs = models.ManyToManyField(
+        ResultadoChave,
+        through="IniciativaKR",
+        related_name="iniciativas",
+        blank=True,
+        verbose_name="KRs",
+    )
+    chave_titulo = models.CharField(max_length=200, editable=False, db_index=True)
+
+    campos_nao_auditados = frozenset({"chave_titulo"})
+
+    class Meta:
+        verbose_name = "iniciativa"
+        verbose_name_plural = "iniciativas"
+        ordering = ["objetivo_id", "prazo", "id"]
+
+    def __str__(self):
+        return self.titulo
+
+    @property
+    def empresa_para_auditoria(self) -> int | None:
+        return self.objetivo.empresa_id if self.objetivo_id else None
+
+    @property
+    def encerrada(self) -> bool:
+        return self.status in self.STATUS_ENCERRADOS
+
+    def atrasada_em(self, hoje) -> bool:
+        return bool(self.prazo and self.prazo < hoje and not self.encerrada)
+
+    def clean(self):
+        self.titulo = espacos_simples(self.titulo)
+        self.descricao = (self.descricao or "").strip()
+        self.chave_titulo = chave_busca(self.titulo)
+        # A data de conclusão acompanha o status automaticamente.
+        if self.status == self.Status.CONCLUIDA:
+            self.data_conclusao = self.data_conclusao or timezone.localdate()
+        else:
+            self.data_conclusao = None
+
+        anterior = (
+            Iniciativa.objects.filter(pk=self.pk).values("responsavel_id").first()
+            if self.pk
+            else None
+        ) or {}
+        if self.responsavel_id and self.responsavel_id != anterior.get("responsavel_id"):
+            problema = problema_do_responsavel(
+                self.responsavel, self.objetivo.empresa_id if self.objetivo_id else None
+            )
+            if problema:
+                raise ValidationError({"responsavel": problema})
+
+
+class IniciativaKR(models.Model):
+    """KR para o qual a iniciativa contribui (sempre do mesmo objetivo, Q-21)."""
+
+    iniciativa = models.ForeignKey(Iniciativa, on_delete=models.PROTECT, related_name="vinculos_kr")
+    kr = models.ForeignKey(
+        ResultadoChave, on_delete=models.PROTECT, related_name="vinculos_iniciativa"
+    )
+    criado_em = models.DateTimeField("vinculado em", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "KR da iniciativa"
+        verbose_name_plural = "KRs das iniciativas"
+        constraints = [
+            models.UniqueConstraint(fields=["iniciativa", "kr"], name="iniciativa_kr_unico")
+        ]
+
+    def __str__(self):
+        return f"{self.iniciativa} → {self.kr}"

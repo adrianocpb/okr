@@ -45,3 +45,13 @@ class Cenario:
             **medicao,
         }
         return services.criar_kr(objetivo_id=objetivo.pk, dados=dados, ator=ATOR, escopo=TODAS)
+
+    def iniciativa(self, objetivo, titulo="Campanha de vendas", krs=(), responsavel=None, **extra):
+        dados = {"titulo": titulo, "responsavel": responsavel or self.bruno, **extra}
+        return services.criar_iniciativa(
+            objetivo_id=objetivo.pk,
+            dados=dados,
+            kr_ids=[kr.pk for kr in krs],
+            ator=ATOR,
+            escopo=TODAS,
+        )

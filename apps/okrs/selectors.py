@@ -1,12 +1,15 @@
 """Consultas de objetivos, sempre limitadas pelo escopo de acesso."""
 
-from django.db.models import Q, QuerySet
+from datetime import date
+
+from django.db.models import F, Q, QuerySet
+from django.utils import timezone
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.acesso import EscopoAcesso
 from apps.core.erros import AcessoNegado
 from apps.core.texto import chave_busca
-from apps.okrs.models import Objetivo, ResultadoChave, VinculoObjetivo
+from apps.okrs.models import Iniciativa, Objetivo, ResultadoChave, VinculoObjetivo
 
 STATUS_FILTRO = {"": "Todos", **dict(Objetivo.Status.choices)}
 
@@ -95,6 +98,11 @@ def responsabilidades_da_pessoa(escopo: EscopoAcesso, pessoa: Pessoa) -> dict:
     return {
         "owner": objetivos.filter(owner=pessoa),
         "sponsor": objetivos.filter(sponsor=pessoa),
+        "iniciativas": _marcar_atraso(
+            _iniciativas_visiveis(escopo)
+            .filter(responsavel=pessoa)
+            .order_by("-objetivo__ciclo__ano", "chave_titulo")
+        ),
         "krs": _krs_visiveis(escopo)
         .filter(responsavel=pessoa)
         .order_by("-objetivo__ciclo__ano", "chave_titulo"),
@@ -141,3 +149,45 @@ def situacao_do_kr(kr: ResultadoChave):
     from apps.acompanhamento.selectors import situacao_do_kr as situacao
 
     return situacao(kr)
+
+
+# ------------------------------------------------------------- iniciativas
+
+
+def _iniciativas_visiveis(escopo: EscopoAcesso) -> QuerySet:
+    return escopo.filtrar(
+        Iniciativa.objects.select_related("objetivo__empresa", "objetivo__ciclo", "responsavel"),
+        "objetivo__empresa_id",
+    )
+
+
+def obter_iniciativa(escopo: EscopoAcesso, iniciativa_id: int) -> Iniciativa:
+    try:
+        return _iniciativas_visiveis(escopo).get(pk=iniciativa_id)
+    except Iniciativa.DoesNotExist as exc:
+        raise AcessoNegado() from exc
+
+
+def _marcar_atraso(iniciativas, hoje: date | None = None) -> list[Iniciativa]:
+    hoje = hoje or timezone.localdate()
+    lista = list(iniciativas)
+    for iniciativa in lista:
+        iniciativa.atrasada = iniciativa.atrasada_em(hoje)
+    return lista
+
+
+def iniciativas_do_objetivo(objetivo: Objetivo, hoje: date | None = None) -> list[Iniciativa]:
+    """Iniciativas do objetivo, com `iniciativa.atrasada` (prazo vencido e não encerrada)."""
+    iniciativas = (
+        objetivo.iniciativas.select_related("responsavel")
+        .prefetch_related("krs")
+        .order_by(F("prazo").asc(nulls_last=True), "id")
+    )
+    return _marcar_atraso(iniciativas, hoje)
+
+
+def iniciativas_do_kr(kr: ResultadoChave, hoje: date | None = None) -> list[Iniciativa]:
+    iniciativas = kr.iniciativas.select_related("responsavel").order_by(
+        F("prazo").asc(nulls_last=True), "id"
+    )
+    return _marcar_atraso(iniciativas, hoje)

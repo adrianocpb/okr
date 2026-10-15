@@ -2,7 +2,7 @@
 
 Aplicação web para cadastro, acompanhamento e análise de OKRs (Objectives and Key Results) de múltiplas empresas de um grupo empresarial.
 
-> **Situação atual:** Etapa 7 (empresas, pessoas, ciclos, objetivos, KRs e check-ins). A aplicação roda localmente; iniciativas e o painel serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). A aplicação roda localmente; históricos consolidados e o painel serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
 
 ## Requisitos
 
@@ -119,9 +119,9 @@ apps/cadastros/    empresas, pessoas, vínculos pessoa ↔ empresa e ciclos (anu
 apps/contas/       modelo de usuário (login corporativo em etapa futura)
 templates/         layout base
 static/            CSS e bibliotecas servidas localmente
-apps/okrs/         objetivos, vínculos anual ↔ trimestral, KRs e marcos
+apps/okrs/         objetivos, vínculos anual ↔ trimestral, KRs, marcos e iniciativas
 apps/okrs/dominio/ cálculo de progresso e cor (Python puro, sem banco)
-apps/acompanhamento/ check-ins (somente inserção) e retificações
+apps/acompanhamento/ check-ins, retificações e atualizações de iniciativas (somente inserção)
 scripts/           utilitários PowerShell (backup e agendamento)
 docs/              especificação, arquitetura e plano
 var/               banco local e arquivos gerados (ignorado pelo Git)

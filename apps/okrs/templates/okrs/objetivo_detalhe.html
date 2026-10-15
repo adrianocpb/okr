@@ -70,6 +70,31 @@
     {% endif %}
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-iniciativas">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-iniciativas">Iniciativas</h2>
+      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}">Nova iniciativa</a>{% endif %}
+    </div>
+    {% if iniciativas %}
+      <table class="tabela tabela--compacta">
+        <thead><tr><th scope="col">Iniciativa</th><th scope="col">Responsável</th><th scope="col">Prazo</th><th scope="col">KRs</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          {% for iniciativa in iniciativas %}
+            <tr>
+              <td><a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo }}</a></td>
+              <td>{{ iniciativa.responsavel.nome }}</td>
+              <td>{{ iniciativa.prazo|date:"d/m/Y"|default:"—" }}</td>
+              <td>{% for kr in iniciativa.krs.all %}{{ kr.titulo }}{% if not forloop.last %}; {% endif %}{% empty %}<span class="texto-suave">Objetivo</span>{% endfor %}</td>
+              <td>{% include "okrs/_iniciativa_status.html" %}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="texto-suave">Nenhuma iniciativa cadastrada. Iniciativas são as ações para alcançar o objetivo e os KRs.</p>
+    {% endif %}
+  </section>
+
   {% if objetivo.ciclo.tipo == "trimestral" %}
     <section class="cartao" aria-labelledby="titulo-vinculos">
       <h2 id="titulo-vinculos">Objetivos anuais vinculados</h2>

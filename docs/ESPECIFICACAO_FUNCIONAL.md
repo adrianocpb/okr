@@ -118,7 +118,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 |---|---|
 | RF-31 | Cadastrar iniciativa com: título (obrigatório), descrição, **objetivo (obrigatório)**, **KRs para os quais contribui (zero, um ou vários)** [Decidido em Q-08], **responsável principal** (obrigatório), prazo (data prevista) e status. Os KRs vinculados devem ser do mesmo objetivo [Decisão proposta; ver Q-21]. |
 | RF-32 | Status: *Não iniciada*, *Em andamento*, *Concluída*, *Cancelada*. A data de conclusão é registrada ao concluir. |
-| RF-33 | Registrar **atualizações de execução** (somente inserção): data, status, comentário, dificuldades/impedimentos, próximos passos e autor. |
+| RF-33 | Registrar **atualizações de execução** (somente inserção): data, status, comentário, dificuldades/impedimentos, próximos passos e autor. O status informado passa a ser o status atual da iniciativa, com registro no histórico de alterações [Decisão de implementação na E8]. Iniciativa cancelada não recebe atualizações; prazo é opcional e, quando vencido sem conclusão, a iniciativa aparece como atrasada. |
 | RF-34 | Alterações estruturais (prazo, responsável, inclusão ou remoção de KR vinculado, descrição) vão para a auditoria. |
 | RF-35 | A iniciativa não altera o progresso do KR. O progresso do KR vem apenas dos check-ins do KR. |
 

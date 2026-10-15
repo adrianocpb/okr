@@ -5,7 +5,7 @@ from django import forms
 from apps.acompanhamento.models import CheckIn
 from apps.okrs import selectors as okrs
 from apps.okrs.forms import CampoPessoa, CampoValor, _decimal_para_formulario
-from apps.okrs.models import Marco, ResultadoChave
+from apps.okrs.models import Iniciativa, Marco, ResultadoChave
 
 Tipo = ResultadoChave.TipoMedicao
 
@@ -117,3 +117,43 @@ class CheckInForm(forms.Form):
         dados = dict(self.cleaned_data)
         dados["marcos_ids"] = [m.pk for m in dados.pop("marcos", [])]
         return dados
+
+
+class AtualizacaoIniciativaForm(forms.Form):
+    data_referencia = forms.DateField(
+        label="Data de referência",
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+    )
+    status = forms.ChoiceField(
+        label="Status da iniciativa",
+        choices=Iniciativa.Status.choices,
+        widget=forms.RadioSelect,
+        help_text="Passa a ser o status atual da iniciativa.",
+    )
+    comentario = forms.CharField(
+        label="Comentário", required=False, widget=forms.Textarea(attrs={"rows": 3})
+    )
+    dificuldades = forms.CharField(
+        label="Dificuldades ou impedimentos",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2}),
+    )
+    proximos_passos = forms.CharField(
+        label="Próximos passos", required=False, widget=forms.Textarea(attrs={"rows": 2})
+    )
+    autor_informado = CampoPessoa(
+        label="Quem está registrando",
+        queryset=None,
+        empty_label="Selecione…",
+        help_text="Sem login, a autoria é informada e aparece como não verificada.",
+    )
+
+    def __init__(self, *args, iniciativa: Iniciativa, hoje: date, **kwargs):
+        inicial = kwargs.setdefault("initial", {})
+        inicial.setdefault("data_referencia", hoje)
+        inicial.setdefault("status", iniciativa.status)
+        inicial.setdefault("autor_informado", iniciativa.responsavel_id)
+        super().__init__(*args, **kwargs)
+        self.fields["autor_informado"].queryset = okrs.pessoas_para_responsabilidade(
+            iniciativa.objetivo.empresa
+        )

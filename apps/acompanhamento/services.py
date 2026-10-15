@@ -6,12 +6,13 @@ from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from apps.acompanhamento.models import CheckIn, CheckInMarco
+from apps.acompanhamento.models import AtualizacaoIniciativa, CheckIn, CheckInMarco
 from apps.cadastros.models import Pessoa
+from apps.core import services as core_services
 from apps.core.acesso import Ator, EscopoAcesso
 from apps.core.erros import ErroDeNegocio
 from apps.okrs import selectors as okrs
-from apps.okrs.models import Objetivo, ResultadoChave, problema_do_responsavel
+from apps.okrs.models import Iniciativa, Objetivo, ResultadoChave, problema_do_responsavel
 
 Tipo = ResultadoChave.TipoMedicao
 
@@ -135,3 +136,58 @@ def retificar_checkin(
         raise ValidationError({"justificativa_retificacao": "Informe o motivo da retificação."})
     _validar(kr, dados, hoje or timezone.localdate())
     return _gravar(kr, dados, ator, retifica=original)
+
+
+# ------------------------------------------------- execução de iniciativas
+
+
+@transaction.atomic
+def registrar_atualizacao(
+    *,
+    iniciativa_id: int,
+    dados: dict,
+    ator: Ator,
+    escopo: EscopoAcesso,
+    hoje: date | None = None,
+) -> AtualizacaoIniciativa:
+    """Registra o acompanhamento da execução. O status informado passa a ser o
+    status da iniciativa (com registro no histórico de alterações)."""
+    hoje = hoje or timezone.localdate()
+    iniciativa = okrs.obter_iniciativa(escopo, iniciativa_id)
+    if iniciativa.status == Iniciativa.Status.CANCELADA:
+        raise ErroDeNegocio("Iniciativa cancelada não recebe atualizações.")
+    dados = _resolver_autor(dados)
+
+    erros = {}
+    data_referencia = dados.get("data_referencia")
+    if data_referencia is None:
+        erros["data_referencia"] = "Informe a data de referência."
+    elif data_referencia > hoje:
+        erros["data_referencia"] = "A data de referência não pode ser futura."
+    if dados.get("status") not in Iniciativa.Status.values:
+        erros["status"] = "Escolha o status da iniciativa."
+    autor = dados.get("autor_informado")
+    if autor is None:
+        erros["autor_informado"] = "Informe quem está registrando a atualização."
+    else:
+        problema = problema_do_responsavel(autor, iniciativa.objetivo.empresa_id)
+        if problema:
+            erros["autor_informado"] = problema
+    if erros:
+        raise ValidationError(erros)
+
+    atualizacao = AtualizacaoIniciativa.objects.create(
+        iniciativa=iniciativa,
+        data_referencia=data_referencia,
+        status=dados["status"],
+        comentario=(dados.get("comentario") or "").strip(),
+        dificuldades=(dados.get("dificuldades") or "").strip(),
+        proximos_passos=(dados.get("proximos_passos") or "").strip(),
+        autor_informado=autor,
+        registrado_por_id=ator.usuario_id,
+    )
+    if iniciativa.status != dados["status"]:
+        core_services.atualizar(
+            iniciativa, {"status": dados["status"]}, versao_esperada=iniciativa.versao, ator=ator
+        )
+    return atualizacao

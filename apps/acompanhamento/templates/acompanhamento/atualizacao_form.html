@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block titulo %}Atualização da iniciativa{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_detalhe' iniciativa.objetivo.pk %}">{{ iniciativa.objetivo.titulo|truncatechars:50 }}</a> ›
+    <a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo|truncatechars:50 }}</a>
+  </nav>
+  <h1>Registrar atualização <span class="texto-suave">· {{ iniciativa.titulo }}</span></h1>
+  <p class="introducao">Atualizações não são editadas nem excluídas; ficam no histórico de execução da iniciativa.</p>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for campo in form %}
+      {% include "core/_campo.html" with campo=campo %}
+    {% endfor %}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Registrar atualização</button>
+      <a class="botao" href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

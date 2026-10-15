@@ -79,6 +79,22 @@
     {% if kr.descricao %}<h3>Descrição</h3><p>{{ kr.descricao|linebreaksbr }}</p>{% endif %}
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-iniciativas">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-iniciativas">Iniciativas relacionadas</h2>
+      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}?kr={{ kr.pk }}">Nova iniciativa para este KR</a>{% endif %}
+    </div>
+    {% if iniciativas %}
+      <ul class="lista-simples">
+        {% for iniciativa in iniciativas %}
+          <li><a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo }}</a> <span class="texto-suave">· {{ iniciativa.responsavel.nome }}{% if iniciativa.prazo %} · prazo {{ iniciativa.prazo|date:"d/m/Y" }}{% endif %}</span> {% include "okrs/_iniciativa_status.html" %}</li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="texto-suave">Nenhuma iniciativa ligada a este KR.</p>
+    {% endif %}
+  </section>
+
   {% if kr.tipo_medicao == "marcos" %}
     <section class="cartao" aria-labelledby="titulo-marcos">
       <h2 id="titulo-marcos">Marcos</h2>

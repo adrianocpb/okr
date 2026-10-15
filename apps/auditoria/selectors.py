@@ -15,6 +15,8 @@ ROTULOS_ESPECIAIS = {
     "empresa": "Empresa",
     "objetivo_anual": "Objetivo anual",
     "objetivo_trimestral": "Objetivo trimestral",
+    "kr": "KR",
+    "marco": "Marco",
 }
 DATA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}")
 

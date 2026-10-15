@@ -1,9 +1,10 @@
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from apps.acompanhamento.selectors import checkins_do_kr
+from apps.acompanhamento.selectors import atualizacoes_da_iniciativa, checkins_do_kr
 from apps.auditoria.selectors import historico_legivel
 from apps.cadastros import selectors as cadastros
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
@@ -12,7 +13,7 @@ from apps.core.views_apoio import executar as _executar
 from apps.core.views_apoio import filtros as _filtros
 from apps.core.views_apoio import pagina as _pagina
 from apps.okrs import selectors, services
-from apps.okrs.forms import KRForm, MarcoForm, ObjetivoForm, VinculoForm
+from apps.okrs.forms import IniciativaForm, KRForm, MarcoForm, ObjetivoForm, VinculoForm
 
 
 def _inteiro(valor: str) -> int | None:
@@ -59,6 +60,7 @@ def objetivo_detalhe(request, pk):
             "vinculos": selectors.vinculos_do_objetivo(objetivo),
             "form_vinculo": VinculoForm(objetivo=objetivo),
             "krs": selectors.krs_do_objetivo(objetivo),
+            "iniciativas": selectors.iniciativas_do_objetivo(objetivo),
             "historico": historico_legivel(objetivo),
         },
     )
@@ -210,6 +212,7 @@ def kr_detalhe(request, pk):
             "objetivo": kr.objetivo,
             "situacao": selectors.situacao_do_kr(kr),
             "checkins": checkins_do_kr(kr),
+            "iniciativas": selectors.iniciativas_do_kr(kr),
             "pode_registrar": kr.status != kr.Status.CANCELADO
             and kr.objetivo.status != kr.objetivo.Status.CANCELADO,
             "marcos": kr.marcos.all(),
@@ -278,3 +281,79 @@ def marco_remover(request, pk, marco_pk):
     else:
         messages.success(request, "Marco removido. O registro permanece no histórico do KR.")
     return redirect("okrs:kr_detalhe", pk=pk)
+
+
+# ------------------------------------------------------------- iniciativas
+
+
+def iniciativa_nova(request, objetivo_pk):
+    escopo = escopo_da_requisicao(request)
+    objetivo = selectors.obter_objetivo(escopo, objetivo_pk)
+    if objetivo.encerrado:
+        raise ErroDeNegocio("Objetivo concluído ou cancelado não recebe novas iniciativas.")
+    inicial = {}
+    if request.GET.get("kr", "").isdigit():
+        inicial["krs"] = [int(request.GET["kr"])]
+    form = IniciativaForm(request.POST or None, initial=inicial, objetivo=objetivo)
+    if request.method == "POST" and form.is_valid():
+        iniciativa = _executar(
+            form,
+            lambda: services.criar_iniciativa(
+                objetivo_id=objetivo.pk,
+                dados=form.dados(),
+                kr_ids=form.kr_ids(),
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+            ),
+        )
+        if iniciativa:
+            messages.success(request, "Iniciativa cadastrada.")
+            return redirect("okrs:iniciativa_detalhe", pk=iniciativa.pk)
+    return render(
+        request,
+        "okrs/iniciativa_form.html",
+        {"form": form, "objetivo": objetivo, "iniciativa": None},
+    )
+
+
+def iniciativa_detalhe(request, pk):
+    iniciativa = selectors.obter_iniciativa(escopo_da_requisicao(request), pk)
+    iniciativa.atrasada = iniciativa.atrasada_em(timezone.localdate())
+    return render(
+        request,
+        "okrs/iniciativa_detalhe.html",
+        {
+            "iniciativa": iniciativa,
+            "objetivo": iniciativa.objetivo,
+            "atrasada": iniciativa.atrasada,
+            "krs": iniciativa.krs.order_by("id"),
+            "atualizacoes": atualizacoes_da_iniciativa(iniciativa),
+            "historico": historico_legivel(iniciativa),
+        },
+    )
+
+
+def iniciativa_editar(request, pk):
+    escopo = escopo_da_requisicao(request)
+    iniciativa = selectors.obter_iniciativa(escopo, pk)
+    form = IniciativaForm(request.POST or None, objetivo=iniciativa.objetivo, iniciativa=iniciativa)
+    if request.method == "POST" and form.is_valid():
+        atualizada = _executar(
+            form,
+            lambda: services.atualizar_iniciativa(
+                pk,
+                dados=form.dados(),
+                kr_ids=form.kr_ids(),
+                versao=form.cleaned_data["versao"] or 0,
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+            ),
+        )
+        if atualizada:
+            messages.success(request, "Iniciativa atualizada.")
+            return redirect("okrs:iniciativa_detalhe", pk=pk)
+    return render(
+        request,
+        "okrs/iniciativa_form.html",
+        {"form": form, "objetivo": iniciativa.objetivo, "iniciativa": iniciativa},
+    )

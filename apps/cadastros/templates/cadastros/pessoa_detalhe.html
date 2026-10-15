@@ -47,7 +47,7 @@
 
   <section class="cartao" aria-labelledby="titulo-responsabilidades">
     <h2 id="titulo-responsabilidades">Responsabilidades</h2>
-    {% if responsabilidades.owner or responsabilidades.sponsor or responsabilidades.krs %}
+    {% if responsabilidades.owner or responsabilidades.sponsor or responsabilidades.krs or responsabilidades.iniciativas %}
       <table class="tabela tabela--compacta">
         <thead><tr><th scope="col">Papel</th><th scope="col">Objetivo</th><th scope="col">Empresa</th><th scope="col">Ciclo</th><th scope="col">Status</th></tr></thead>
         <tbody>
@@ -56,6 +56,9 @@
           {% endfor %}
           {% for objetivo in responsabilidades.sponsor %}
             <tr><td>Sponsor</td><td><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a></td><td>{{ objetivo.empresa.sigla }}</td><td>{{ objetivo.ciclo.rotulo }}</td><td>{% include "okrs/_status.html" %}</td></tr>
+          {% endfor %}
+          {% for iniciativa in responsabilidades.iniciativas %}
+            <tr><td>Responsável por iniciativa</td><td><a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo }}</a> <span class="texto-suave">· {{ iniciativa.objetivo.titulo }}</span></td><td>{{ iniciativa.objetivo.empresa.sigla }}</td><td>{{ iniciativa.objetivo.ciclo.rotulo }}</td><td>{% include "okrs/_iniciativa_status.html" %}</td></tr>
           {% endfor %}
           {% for kr in responsabilidades.krs %}
             <tr><td>Responsável por KR</td><td><a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo }}</a> <span class="texto-suave">· {{ kr.objetivo.titulo }}</span></td><td>{{ kr.objetivo.empresa.sigla }}</td><td>{{ kr.objetivo.ciclo.rotulo }}</td><td>{% include "okrs/_kr_status.html" %}</td></tr>

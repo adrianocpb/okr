@@ -3,7 +3,7 @@ from django import forms
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.formularios import CampoVersao
 from apps.okrs import selectors
-from apps.okrs.models import Objetivo, ResultadoChave
+from apps.okrs.models import Iniciativa, Objetivo, ResultadoChave
 
 
 class CampoCiclo(forms.ModelChoiceField):
@@ -251,3 +251,72 @@ class VinculoForm(forms.Form):
     def __init__(self, *args, objetivo: Objetivo, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["objetivo_anual"].queryset = selectors.anuais_vinculaveis(objetivo)
+
+
+class CampoKRs(forms.ModelMultipleChoiceField):
+    def label_from_instance(self, kr):
+        return (
+            kr.titulo
+            if kr.status == kr.Status.ATIVO
+            else f"{kr.titulo} ({kr.get_status_display().lower()})"
+        )
+
+
+class IniciativaForm(forms.Form):
+    titulo = forms.CharField(label="Título", max_length=200)
+    descricao = forms.CharField(
+        label="Descrição", required=False, widget=forms.Textarea(attrs={"rows": 3})
+    )
+    responsavel = CampoPessoa(
+        label="Responsável",
+        queryset=Pessoa.objects.none(),
+        empty_label="Selecione…",
+        help_text="Responsável principal pela execução.",
+    )
+    prazo = forms.DateField(
+        label="Prazo",
+        required=False,
+        widget=forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+    )
+    status = forms.ChoiceField(
+        label="Status", choices=Iniciativa.Status.choices, initial=Iniciativa.Status.NAO_INICIADA
+    )
+    krs = CampoKRs(
+        label="KRs para os quais contribui",
+        queryset=ResultadoChave.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        help_text=(
+            "Opcional. Apenas KRs deste objetivo. A iniciativa não altera o progresso dos KRs."
+        ),
+    )
+    versao = CampoVersao(required=False)
+
+    def __init__(self, *args, objetivo: Objetivo, iniciativa: Iniciativa | None = None, **kwargs):
+        if iniciativa is not None:
+            kwargs.setdefault(
+                "initial",
+                {
+                    "titulo": iniciativa.titulo,
+                    "descricao": iniciativa.descricao,
+                    "responsavel": iniciativa.responsavel_id,
+                    "prazo": iniciativa.prazo,
+                    "status": iniciativa.status,
+                    "krs": [kr.pk for kr in iniciativa.krs.all()],
+                    "versao": iniciativa.versao,
+                },
+            )
+        super().__init__(*args, **kwargs)
+        self.fields["responsavel"].queryset = selectors.pessoas_para_responsabilidade(
+            objetivo.empresa, iniciativa.responsavel if iniciativa else None
+        )
+        self.fields["krs"].queryset = objetivo.krs.order_by("id")
+
+    def dados(self) -> dict:
+        return {
+            campo: self.cleaned_data[campo]
+            for campo in ("titulo", "descricao", "responsavel", "prazo", "status")
+        }
+
+    def kr_ids(self) -> list[int]:
+        return [kr.pk for kr in self.cleaned_data["krs"]]

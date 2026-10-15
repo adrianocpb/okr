@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block titulo %}Iniciativa · {{ iniciativa.titulo|truncatechars:60 }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+  </nav>
+
+  <div class="cabecalho-pagina">
+    <h1><span class="texto-suave">Iniciativa ·</span> {{ iniciativa.titulo }}</h1>
+    <div class="acoes">
+      {% if iniciativa.status != "cancelada" %}<a class="botao botao--primario" href="{% url 'acompanhamento:atualizacao_nova' iniciativa.pk %}">Registrar atualização</a>{% endif %}
+      <a class="botao" href="{% url 'okrs:iniciativa_editar' iniciativa.pk %}">Editar</a>
+    </div>
+  </div>
+
+  {% if atrasada %}
+    <p class="aviso aviso--alerta">Prazo vencido em {{ iniciativa.prazo|date:"d/m/Y" }} e a iniciativa ainda não foi concluída.</p>
+  {% endif %}
+  {% if iniciativa.responsavel.arquivado %}
+    <p class="aviso aviso--alerta">O responsável por esta iniciativa está arquivado. Considere atribuir outra pessoa.</p>
+  {% endif %}
+
+  <section class="cartao">
+    <h2>Dados</h2>
+    <dl class="situacao">
+      <dt>Objetivo</dt><dd><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a> <span class="texto-suave">({{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }})</span></dd>
+      <dt>Responsável</dt><dd><a href="{% url 'cadastros:pessoa_detalhe' iniciativa.responsavel.pk %}">{{ iniciativa.responsavel.nome }}</a></dd>
+      <dt>Prazo</dt><dd>{{ iniciativa.prazo|date:"d/m/Y"|default:"—" }}</dd>
+      <dt>Status</dt><dd>{% with iniciativa=iniciativa %}{% include "okrs/_iniciativa_status.html" %}{% endwith %}</dd>
+      {% if iniciativa.data_conclusao %}<dt>Concluída em</dt><dd>{{ iniciativa.data_conclusao|date:"d/m/Y" }}</dd>{% endif %}
+      <dt>KRs relacionados</dt>
+      <dd>
+        {% for kr in krs %}<a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo }}</a>{% if not forloop.last %} · {% endif %}{% empty %}<span class="texto-suave">Contribui para o objetivo como um todo</span>{% endfor %}
+      </dd>
+    </dl>
+    {% if iniciativa.descricao %}<h3>Descrição</h3><p>{{ iniciativa.descricao|linebreaksbr }}</p>{% endif %}
+  </section>
+
+  <section class="cartao" aria-labelledby="titulo-atualizacoes">
+    <h2 id="titulo-atualizacoes">Acompanhamento da execução</h2>
+    {% if atualizacoes %}
+      <ol class="checkins">
+        {% for atualizacao in atualizacoes %}
+          <li class="checkin">
+            <div class="checkin__cabecalho">
+              <strong>{{ atualizacao.data_referencia|date:"d/m/Y" }}</strong>
+              <span class="selo selo--neutro">{{ atualizacao.get_status_display }}</span>
+              <span class="texto-suave">por {{ atualizacao.autor_informado.nome }}{% if not atualizacao.autor_verificado %} (informado, não verificado){% endif %} · registrado em {{ atualizacao.registrado_em|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% if atualizacao.comentario %}<p><strong>Comentário:</strong> {{ atualizacao.comentario|linebreaksbr }}</p>{% endif %}
+            {% if atualizacao.dificuldades %}<p><strong>Dificuldades:</strong> {{ atualizacao.dificuldades|linebreaksbr }}</p>{% endif %}
+            {% if atualizacao.proximos_passos %}<p><strong>Próximos passos:</strong> {{ atualizacao.proximos_passos|linebreaksbr }}</p>{% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="texto-suave">Nenhuma atualização registrada.</p>
+    {% endif %}
+  </section>
+
+  {% include "core/_historico.html" %}
+{% endblock %}

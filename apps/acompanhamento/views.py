@@ -3,7 +3,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 
 from apps.acompanhamento import services
-from apps.acompanhamento.forms import CheckInForm
+from apps.acompanhamento.forms import AtualizacaoIniciativaForm, CheckInForm
 from apps.acompanhamento.models import CheckIn
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
 from apps.core.erros import AcessoNegado
@@ -63,4 +63,30 @@ def checkin_retificar(request, pk):
         request,
         "acompanhamento/checkin_form.html",
         {"form": form, "kr": kr, "original": original, "hoje": hoje},
+    )
+
+
+def atualizacao_nova(request, iniciativa_pk):
+    escopo = escopo_da_requisicao(request)
+    iniciativa = okrs.obter_iniciativa(escopo, iniciativa_pk)
+    hoje = timezone.localdate()
+    form = AtualizacaoIniciativaForm(request.POST or None, iniciativa=iniciativa, hoje=hoje)
+    if request.method == "POST" and form.is_valid():
+        atualizacao = executar(
+            form,
+            lambda: services.registrar_atualizacao(
+                iniciativa_id=iniciativa.pk,
+                dados=form.cleaned_data,
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+                hoje=hoje,
+            ),
+        )
+        if atualizacao:
+            messages.success(request, "Atualização registrada.")
+            return redirect("okrs:iniciativa_detalhe", pk=iniciativa.pk)
+    return render(
+        request,
+        "acompanhamento/atualizacao_form.html",
+        {"form": form, "iniciativa": iniciativa},
     )

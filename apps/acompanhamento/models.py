@@ -7,7 +7,7 @@ from django.utils import timezone
 from apps.cadastros.models import Pessoa
 from apps.core.models import ModeloSomenteInsercao
 from apps.okrs.dominio import progresso as dominio
-from apps.okrs.models import Marco, ResultadoChave
+from apps.okrs.models import Iniciativa, Marco, ResultadoChave
 
 
 def _campo_valor(rotulo: str) -> models.DecimalField:
@@ -134,3 +134,49 @@ class CheckInMarco(ModeloSomenteInsercao):
         constraints = [
             models.UniqueConstraint(fields=["checkin", "marco"], name="checkin_marco_unico")
         ]
+
+
+class AtualizacaoIniciativa(ModeloSomenteInsercao):
+    """Acompanhamento da execução de uma iniciativa (somente inserção).
+
+    O status informado passa a ser o status atual da iniciativa.
+    """
+
+    iniciativa = models.ForeignKey(
+        Iniciativa,
+        on_delete=models.PROTECT,
+        related_name="atualizacoes",
+        verbose_name="iniciativa",
+    )
+    data_referencia = models.DateField("data de referência")
+    status = models.CharField("status", max_length=12, choices=Iniciativa.Status.choices)
+    comentario = models.TextField("comentário", blank=True)
+    dificuldades = models.TextField("dificuldades ou impedimentos", blank=True)
+    proximos_passos = models.TextField("próximos passos", blank=True)
+    autor_informado = models.ForeignKey(
+        Pessoa,
+        on_delete=models.PROTECT,
+        related_name="atualizacoes_iniciativa",
+        verbose_name="autor informado",
+    )
+    registrado_por = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="+",
+        verbose_name="usuário que registrou",
+    )
+    registrado_em = models.DateTimeField("registrado em", default=timezone.now, editable=False)
+
+    class Meta:
+        verbose_name = "atualização de iniciativa"
+        verbose_name_plural = "atualizações de iniciativas"
+        ordering = ["-data_referencia", "-registrado_em", "-id"]
+
+    def __str__(self):
+        return f"Atualização de {self.data_referencia:%d/%m/%Y} · {self.iniciativa}"
+
+    @property
+    def autor_verificado(self) -> bool:
+        return self.registrado_por_id is not None

@@ -1,0 +1,6 @@
+{# Selo de status da iniciativa e aviso de atraso. Espera `iniciativa` (com `atrasada`). #}
+{% if iniciativa.status == "nao_iniciada" %}<span class="selo selo--neutro">Não iniciada</span>
+{% elif iniciativa.status == "em_andamento" %}<span class="selo selo--info">Em andamento</span>
+{% elif iniciativa.status == "concluida" %}<span class="selo selo--ok">Concluída</span>
+{% else %}<span class="selo selo--erro">Cancelada</span>{% endif %}
+{% if iniciativa.atrasada %}<span class="selo selo--alerta">Atrasada</span>{% endif %}

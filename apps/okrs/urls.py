@@ -24,4 +24,11 @@ urlpatterns = [
         views.marco_remover,
         name="marco_remover",
     ),
+    path(
+        "objetivos/<int:objetivo_pk>/iniciativas/nova/",
+        views.iniciativa_nova,
+        name="iniciativa_nova",
+    ),
+    path("iniciativas/<int:pk>/", views.iniciativa_detalhe, name="iniciativa_detalhe"),
+    path("iniciativas/<int:pk>/editar/", views.iniciativa_editar, name="iniciativa_editar"),
 ]

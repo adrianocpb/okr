@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block titulo %}{% if iniciativa %}Editar iniciativa{% else %}Nova iniciativa{% endif %}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+    {% if iniciativa %} › <a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo|truncatechars:60 }}</a>{% endif %}
+  </nav>
+  <h1>{% if iniciativa %}Editar iniciativa{% else %}Nova iniciativa{% endif %}</h1>
+  <p class="introducao">Objetivo: {{ objetivo.titulo }} · {{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}. Iniciativas são ações; o progresso dos KRs continua vindo dos check-ins.</p>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {{ form.versao }}
+    {% for campo in form.visible_fields %}
+      {% include "core/_campo.html" with campo=campo %}
+    {% endfor %}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar</button>
+      <a class="botao" href="{% if iniciativa %}{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}{% else %}{% url 'okrs:objetivo_detalhe' objetivo.pk %}{% endif %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

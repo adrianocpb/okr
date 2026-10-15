@@ -156,3 +156,11 @@ def situacao_do_kr(kr: ResultadoChave, hoje: date | None = None) -> SituacaoProg
         proximo_checkin=proxima,
         dias_em_atraso=atraso,
     )
+
+
+def atualizacoes_da_iniciativa(iniciativa) -> list:
+    return list(
+        iniciativa.atualizacoes.select_related("autor_informado", "registrado_por").order_by(
+            "-data_referencia", "-registrado_em", "-id"
+        )
+    )
