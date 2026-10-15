@@ -309,7 +309,12 @@ code {
 }
 
 /* ---------- Componentes gerais ---------- */
-.introducao { color: var(--text-body); }
+.conteudo > h1 { margin: var(--space-2) 0 var(--space-4); }
+.conteudo > h1 .texto-suave { font-size: 18px; }
+.introducao { color: var(--text-muted); font-size: 13px; line-height: 20px; margin: calc(-1 * var(--space-3)) 0 var(--space-5); max-width: 860px; }
+.cabecalho-pagina + .introducao { margin-top: var(--space-1); }
+.trilha a { color: var(--text-body); }
+.trilha a:hover { color: var(--primary); }
 .texto-suave { color: var(--text-muted); font-weight: normal; }
 .nota { color: var(--text-muted); font-size: 13px; line-height: 20px; margin: var(--space-2) 0 var(--space-5); }
 
@@ -328,11 +333,14 @@ code {
 .situacao {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: var(--space-2) var(--space-4);
+  gap: var(--space-3) var(--space-6);
   margin: 0;
 }
-.situacao dt { font-weight: 500; color: var(--text-heading); }
-.situacao dd { margin: 0; }
+.situacao dt { color: var(--text-muted); font-size: 13px; }
+.situacao dd { margin: 0; color: var(--text-heading); }
+
+.pagina-erro { max-width: 640px; margin: var(--space-7) auto; }
+.pagina-erro h1 { margin-top: 0; }
 
 /* Selos (badges tonais) */
 .selo {
@@ -418,7 +426,12 @@ code {
   align-items: flex-end;
   gap: var(--space-4);
   margin: var(--space-5) 0;
+  padding: var(--space-5);
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
+.cartao .filtros { padding: 0; background: none; box-shadow: none; margin: var(--space-4) 0 0; }
 .filtros label { display: flex; flex-direction: column; font-size: 13px; line-height: 20px; color: var(--text-heading); gap: var(--space-1); }
 .filtros__acoes { display: flex; gap: var(--space-2); align-items: center; }
 .filtros__marcacao span { display: flex; gap: 6px; align-items: center; color: var(--text-body); font-size: 15px; padding-bottom: 6px; }
@@ -451,6 +464,21 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); widt
 .tabela tbody tr:hover { background: var(--surface-hover); }
 .tabela tbody tr:last-child td { border-bottom: 0; }
 .tabela .numero { text-align: right; }
+.cartao > .tabela:not(.tabela--compacta) { box-shadow: none; border-radius: 0; width: calc(100% + 2 * var(--space-5)); margin: var(--space-4) calc(-1 * var(--space-5)) calc(-1 * var(--space-5)); border-top: 1px solid var(--border); }
+.cartao > .tabela:not(.tabela--compacta) th:first-child, .cartao > .tabela:not(.tabela--compacta) td:first-child { padding-left: var(--space-5); }
+.cartao > .tabela:not(.tabela--compacta) th:last-child, .cartao > .tabela:not(.tabela--compacta) td:last-child { padding-right: var(--space-5); }
+.tabela td a { color: var(--text-heading); }
+.tabela td a:hover { color: var(--primary); }
+.tabela td a strong { font-weight: 500; }
+
+/* Avatar com iniciais */
+.usuario { display: flex; align-items: center; gap: var(--space-3); }
+.avatar { display: inline-flex; align-items: center; justify-content: center; width: var(--avatar-size); height: var(--avatar-size); flex: none; border-radius: var(--radius-pill); font-size: 13px; font-weight: 500; }
+.avatar--primario { background: var(--primary-subtle); color: var(--primary); }
+.avatar--info { background: var(--info-subtle); color: var(--info); }
+.avatar--sucesso { background: var(--success-subtle); color: var(--success); }
+.avatar--alerta { background: var(--warning-subtle); color: var(--warning); }
+.avatar--neutro { background: var(--secondary-subtle); color: var(--secondary); }
 .tabela--compacta { font-size: 13px; box-shadow: none; border-radius: 0; margin-top: var(--space-2); }
 .tabela--compacta th, .tabela--compacta td { padding: var(--space-2) var(--space-3); }
 
@@ -480,7 +508,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); widt
 
 /* Formulários renderizados pelo Django (form.as_div) */
 .formulario { max-width: 640px; }
-.formulario > div { margin-bottom: 14px; display: flex; flex-direction: column; gap: var(--space-1); }
+.formulario > .acoes { flex-direction: row; margin: var(--space-5) 0 0; }
+.formulario > div:not(.acoes) { margin-bottom: 14px; display: flex; flex-direction: column; gap: var(--space-1); }
 .formulario label { font-weight: 500; color: var(--text-heading); font-size: 13px; }
 .formulario .helptext { font-size: 13px; color: var(--text-muted); }
 .formulario input[type="text"], .formulario input[type="email"] { width: 100%; }
@@ -500,8 +529,10 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); widt
 }
 
 /* ---------- Objetivos (E5) ---------- */
-.lista-escolha { list-style: none; padding: 0; display: grid; gap: var(--space-2); max-width: 640px; }
-.lista-escolha .botao { display: flex; justify-content: flex-start; }
+.lista-escolha { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-4); }
+.lista-escolha .botao { display: flex; justify-content: flex-start; gap: var(--space-2); min-height: 64px; padding: var(--space-4) var(--space-5); border: 1px dashed var(--border-input); background: var(--surface); color: var(--text-body); white-space: normal; text-align: left; font-weight: 400; }
+.lista-escolha .botao strong { color: var(--text-heading); font-weight: 500; }
+.lista-escolha .botao:hover { border-style: solid; border-color: var(--primary); background: var(--surface); }
 .lista-simples__com-acao { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
 .lista-simples__com-acao form { margin: 0; }
 

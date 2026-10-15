@@ -5,7 +5,7 @@
 {% block conteudo %}
   <div class="cabecalho-pagina">
     <h1>Ciclos</h1>
-    <a class="botao botao--primario" href="{% url 'cadastros:ciclo_anual_novo' %}">Novo ciclo anual</a>
+    <a class="botao botao--primario" href="{% url 'cadastros:ciclo_anual_novo' %}">{% include "_icone.html" with nome="mais" %}Novo ciclo anual</a>
   </div>
   <p class="introducao">Cada empresa tem seus próprios ciclos. Os trimestres são criados a partir do ciclo anual correspondente.</p>
 
@@ -38,8 +38,8 @@
     <label class="filtros__marcacao">
       <span><input type="checkbox" name="arquivados" value="1"{% if filtros.arquivados == "1" %} checked{% endif %}> Mostrar arquivados</span>
     </label>
-    <button type="submit" class="botao">Filtrar</button>
-    {% if filtrado %}<a href="{% url 'cadastros:ciclo_lista' %}">Limpar filtros</a>{% endif %}
+    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'cadastros:ciclo_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
   {% if pagina.object_list %}

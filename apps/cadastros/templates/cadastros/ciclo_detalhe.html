@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load l10n %}
 
 {% block titulo %}Ciclo {{ ciclo }}{% endblock %}
 
@@ -38,7 +39,7 @@
     <dl class="situacao">
       <dt>Empresa</dt><dd><a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa }}</a></dd>
       <dt>Tipo</dt><dd>{{ ciclo.get_tipo_display }}</dd>
-      <dt>Ano</dt><dd>{{ ciclo.ano }}</dd>
+      <dt>Ano</dt><dd>{{ ciclo.ano|unlocalize }}</dd>
       {% if ciclo.trimestre %}<dt>Trimestre</dt><dd>{{ ciclo.get_trimestre_display }}</dd>{% endif %}
       {% if ciclo.ciclo_anual %}<dt>Ciclo anual</dt><dd><a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual.rotulo }} ({{ ciclo.ciclo_anual.periodo }})</a></dd>{% endif %}
       <dt>Período</dt><dd>{{ ciclo.periodo }}</dd>
@@ -49,7 +50,7 @@
   <section class="cartao" aria-labelledby="titulo-objetivos">
     <div class="cabecalho-secao">
       <h2 id="titulo-objetivos">Objetivos do ciclo</h2>
-      {% if not ciclo.arquivado and not ciclo.empresa.arquivado %}<a class="botao" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">Novo objetivo neste ciclo</a>{% endif %}
+      {% if not ciclo.arquivado and not ciclo.empresa.arquivado %}<a class="botao" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">{% include "_icone.html" with nome="mais" %}Novo objetivo neste ciclo</a>{% endif %}
     </div>
     {% if objetivos %}
       <ul class="lista-simples">
@@ -74,7 +75,7 @@
                 <button type="submit" class="botao botao--primario">Gerar trimestres que faltam</button>
               </form>
             {% endif %}
-            <a class="botao" href="{% url 'cadastros:ciclo_trimestre_novo' ciclo.pk %}">Novo trimestre</a>
+            <a class="botao" href="{% url 'cadastros:ciclo_trimestre_novo' ciclo.pk %}">{% include "_icone.html" with nome="mais" %}Novo trimestre</a>
           </div>
         {% endif %}
       </div>

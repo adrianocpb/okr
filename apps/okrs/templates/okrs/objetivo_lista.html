@@ -1,13 +1,12 @@
 {% extends "base.html" %}
 {% load static okrs_formato %}
 
-{% block titulo %}Objetivos  <script src="{% static 'js/objetivos_lista.js' %}" defer></script>
-{% endblock %}
+{% block titulo %}Objetivos{% endblock %}
 
 {% block conteudo %}
   <div class="cabecalho-pagina">
     <h1>Objetivos</h1>
-    <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}{% if empresa_id %}?empresa={{ empresa_id }}{% endif %}">Novo objetivo</a>
+    <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}{% if empresa_id %}?empresa={{ empresa_id }}{% endif %}">{% include "_icone.html" with nome="mais" %}Novo objetivo</a>
   </div>
 
   <form method="get" class="filtros" role="search" aria-label="Filtrar objetivos">
@@ -31,8 +30,8 @@
         {% for valor, rotulo in status_opcoes.items %}<option value="{{ valor }}"{% if valor == filtros.status %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
       </select>
     </label>
-    <button type="submit" class="botao">Filtrar</button>
-    {% if filtrado %}<a href="{% url 'okrs:objetivo_lista' %}">Limpar filtros</a>{% endif %}
+    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'okrs:objetivo_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
   {% if pagina.object_list %}

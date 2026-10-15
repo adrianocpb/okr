@@ -91,7 +91,7 @@
   <section class="cartao" aria-labelledby="titulo-iniciativas">
     <div class="cabecalho-secao">
       <h2 id="titulo-iniciativas">Iniciativas relacionadas</h2>
-      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}?kr={{ kr.pk }}">Nova iniciativa para este KR</a>{% endif %}
+      {% if not objetivo.encerrado %}<a class="botao" href="{% url 'okrs:iniciativa_nova' objetivo.pk %}?kr={{ kr.pk }}">{% include "_icone.html" with nome="mais" %}Nova iniciativa para este KR</a>{% endif %}
     </div>
     {% if iniciativas %}
       <ul class="lista-simples">

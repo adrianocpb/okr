@@ -5,7 +5,7 @@
 {% block conteudo %}
   <div class="cabecalho-pagina">
     <h1>Empresas</h1>
-    <a class="botao botao--primario" href="{% url 'cadastros:empresa_nova' %}">Nova empresa</a>
+    <a class="botao botao--primario" href="{% url 'cadastros:empresa_nova' %}">{% include "_icone.html" with nome="mais" %}Nova empresa</a>
   </div>
 
   <form method="get" class="filtros" role="search" aria-label="Filtrar empresas">
@@ -19,8 +19,8 @@
         {% endfor %}
       </select>
     </label>
-    <button type="submit" class="botao">Filtrar</button>
-    {% if busca or situacao != "ativas" %}<a href="{% url 'cadastros:empresa_lista' %}">Limpar filtros</a>{% endif %}
+    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    {% if busca or situacao != "ativas" %}<a class="botao botao--fantasma" href="{% url 'cadastros:empresa_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
   {% if pagina.object_list %}

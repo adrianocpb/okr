@@ -12,7 +12,7 @@
     <h2 id="titulo-okrs">OKRs</h2>
     <div class="acoes">
       <a class="botao botao--primario" href="{% url 'okrs:objetivo_lista' %}">Objetivos</a>
-      <a class="botao" href="{% url 'okrs:objetivo_novo' %}">Novo objetivo</a>
+      <a class="botao" href="{% url 'okrs:objetivo_novo' %}">{% include "_icone.html" with nome="mais" %}Novo objetivo</a>
     </div>
   </section>
 
