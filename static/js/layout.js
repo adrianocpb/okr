@@ -1,4 +1,4 @@
-// Layout RC+: menu lateral em telas pequenas e alternância de tema claro/escuro.
+// Layout RC+: menu lateral (gaveta em telas pequenas, recolhível em telas largas) e tema claro/escuro.
 // Sem JavaScript, o menu fica visível no topo da página e o tema segue o sistema operacional.
 (function () {
   "use strict";
@@ -30,6 +30,40 @@
       definirMenu(false);
     }
   });
+
+  // Recolher/expandir o menu lateral em telas largas; a escolha fica salva no navegador.
+  const recolher = document.querySelector("[data-recolher-menu]");
+  const rotulos = menu ? menu.querySelectorAll(".navegacao__item") : [];
+
+  function aplicarRecolhido(recolhido) {
+    if (recolhido) raiz.dataset.menu = "recolhido";
+    else delete raiz.dataset.menu;
+    if (recolher) {
+      const texto = recolhido ? "Expandir menu" : "Recolher menu";
+      recolher.setAttribute("aria-expanded", String(!recolhido));
+      recolher.setAttribute("aria-label", texto);
+      recolher.title = texto;
+    }
+    // Com o menu recolhido, o nome de cada item aparece ao passar o mouse.
+    rotulos.forEach(function (item) {
+      const rotulo = item.querySelector(".navegacao__rotulo");
+      if (recolhido && rotulo) item.title = rotulo.textContent.trim();
+      else item.removeAttribute("title");
+    });
+  }
+
+  aplicarRecolhido(raiz.dataset.menu === "recolhido");
+  if (recolher) {
+    recolher.addEventListener("click", function () {
+      const recolhido = raiz.dataset.menu !== "recolhido";
+      aplicarRecolhido(recolhido);
+      try {
+        localStorage.setItem("rc-menu", recolhido ? "recolhido" : "expandido");
+      } catch (e) {
+        /* armazenamento indisponível: vale só para esta página */
+      }
+    });
+  }
 
   function temaAtual() {
     if (raiz.dataset.tema) return raiz.dataset.tema;
