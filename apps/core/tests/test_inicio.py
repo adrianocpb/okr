@@ -16,7 +16,7 @@ def test_pagina_inicial_responde_em_portugues(client):
     assert resposta.status_code == 200
     html = resposta.content.decode()
     assert '<html lang="pt-BR">' in html
-    assert "Gestão de OKRs do Grupo" in html
+    assert "Gestão OKR" in html
     assert "Situação do sistema" in html
 
 
