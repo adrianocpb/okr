@@ -37,6 +37,15 @@
     </dl>
   </section>
 
+  <section class="cartao" aria-labelledby="titulo-evolucao">
+    <h2 id="titulo-evolucao">Evolução</h2>
+    {% if desenho %}
+      {% include "acompanhamento/_grafico_kr.html" %}
+    {% else %}
+      <p class="texto-suave">O gráfico aparece a partir do primeiro check-in.</p>
+    {% endif %}
+  </section>
+
   <section class="cartao" aria-labelledby="titulo-checkins">
     <h2 id="titulo-checkins">Histórico de check-ins</h2>
     {% if checkins %}

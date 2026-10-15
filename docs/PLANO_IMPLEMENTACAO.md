@@ -223,11 +223,11 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E11 — Visualizações de evolução e comparação entre períodos
+### E11 — Visualizações de evolução e comparação entre períodos ✅ (aguardando validação)
 
 **Objetivo:** gráficos de evolução e comparações válidas.
 **Dependências:** E10.
-**Entregáveis:** gráfico por KR (valores, meta e linha de base) com Chart.js servido localmente; evolução do mesmo KR ao longo dos check-ins; comparação entre ciclos (objetivo anual e trimestrais vinculados) com os KRs lado a lado, sem cálculo combinado.
+**Entregáveis:** gráfico por KR (valores, meta e linha de base) em SVG gerado no servidor (substitui o Chart.js previsto: sem dependência externa e testável); evolução do mesmo KR ao longo dos check-ins; comparação entre ciclos (objetivo anual e trimestrais vinculados) com os KRs lado a lado, sem cálculo combinado.
 **Critérios de aceite:**
 - [ ] Teste: nenhuma comparação entre períodos combina valores de KRs diferentes.
 - [ ] Gráficos funcionam sem internet (sem CDN).

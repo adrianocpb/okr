@@ -304,3 +304,19 @@ input[type="text"], input[type="search"], input[type="email"], input[type="numbe
 .alerta--baixa { border-left-color: #9aa5b1; }
 .alerta__tipo { font-weight: 700; font-size: 0.85rem; }
 @media (max-width: 700px) { .resumo__cartao--largo { grid-column: auto; } .objetivo-cartao__situacao { align-items: flex-start; } }
+
+/* ---------- Gráficos (E11) ---------- */
+.grafico { margin: 0; }
+.grafico__svg { width: 100%; height: auto; max-height: 280px; background: var(--cor-superficie); }
+.grafico__grade { stroke: var(--cor-borda); stroke-width: 1; }
+.grafico__eixo { font-size: 11px; fill: var(--cor-texto-suave); }
+.grafico__referencia { stroke: #2f9e44; stroke-width: 1.5; stroke-dasharray: 6 4; }
+.grafico__rotulo-referencia { font-size: 11px; fill: #2f6e3a; font-weight: 600; }
+.grafico__hoje { stroke: #9aa5b1; stroke-width: 1; stroke-dasharray: 2 3; }
+.grafico__linha { fill: none; stroke: var(--cor-marca); stroke-width: 2.5; }
+.grafico__ponto { fill: var(--cor-superficie); stroke: var(--cor-marca); stroke-width: 2.5; }
+.desdobramento { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.desdobramento__trimestre { border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: 10px; background: var(--cor-fundo); }
+.desdobramento__trimestre h3 { margin: 0 0 6px; font-size: 1rem; }
+.desdobramento__objetivo { margin-bottom: 10px; }
+.desdobramento__kr { font-size: 0.85rem; margin: 4px 0; }

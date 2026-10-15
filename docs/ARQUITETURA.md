@@ -48,7 +48,7 @@ Convenção usada neste documento:
 | Linguagem | Python | 3.14 (já instalado) |
 | Framework web | **Django** (LTS) | 5.2.x (suporte de segurança até abril de 2028) |
 | Interface | Templates do Django renderizados no servidor, CSS próprio e JavaScript mínimo; **HTMX** opcional para interações parciais, servido localmente (sem CDN) | adotar somente quando necessário |
-| Gráficos | Chart.js servido localmente (`static/vendor/`) | a partir da etapa de visualizações |
+| Gráficos | SVG gerado no servidor (sem biblioteca JavaScript), com tabela equivalente [decisão da E11: funciona sem internet, sem dependência externa e é testável] | E11 |
 | Banco local | SQLite (via ORM do Django) | embutido |
 | Banco em servidor | PostgreSQL (próprio ou gerenciado, como o Supabase) | 16+ |
 | Driver PostgreSQL | psycopg 3 | somente quando a etapa de PostgreSQL começar |

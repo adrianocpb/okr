@@ -127,15 +127,35 @@
     </section>
   {% else %}
     <section class="cartao" aria-labelledby="titulo-vinculos">
-      <h2 id="titulo-vinculos">Objetivos trimestrais vinculados</h2>
+      <h2 id="titulo-vinculos">Desdobramento por trimestre</h2>
+      <p class="texto-suave">Objetivos trimestrais vinculados a este objetivo, lado a lado. Cada KR mantém sua própria medida; não há valor combinado entre KRs nem entre trimestres. O vínculo é feito na tela do objetivo trimestral.</p>
       {% if vinculos.trimestrais %}
-        <ul class="lista-simples">
-          {% for vinculo in vinculos.trimestrais %}
-            <li><span class="selo selo--neutro">{{ vinculo.objetivo_trimestral.ciclo.rotulo }}</span> <a href="{% url 'okrs:objetivo_detalhe' vinculo.objetivo_trimestral.pk %}">{{ vinculo.objetivo_trimestral.titulo }}</a></li>
+        <div class="desdobramento">
+          {% for coluna in desdobramento %}
+            <div class="desdobramento__trimestre">
+              <h3>{{ coluna.rotulo }}{% if coluna.ciclo %} <span class="texto-suave">· {{ coluna.ciclo.periodo }}</span>{% endif %}</h3>
+              {% for trimestral in coluna.objetivos %}
+                {% with objetivo=trimestral %}
+                  <div class="desdobramento__objetivo">
+                    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}"><strong>{{ objetivo.titulo }}</strong></a> {% include "okrs/_status.html" %}
+                    {% for kr in objetivo.krs_lista %}
+                      <div class="desdobramento__kr">
+                        <a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo }}</a>
+                        {% include "okrs/_progresso.html" with situacao=kr.situacao %}
+                      </div>
+                    {% empty %}
+                      <p class="texto-suave">Sem KRs.</p>
+                    {% endfor %}
+                  </div>
+                {% endwith %}
+              {% empty %}
+                <p class="texto-suave">Nenhum objetivo vinculado.</p>
+              {% endfor %}
+            </div>
           {% endfor %}
-        </ul>
+        </div>
       {% else %}
-        <p class="texto-suave">Nenhum objetivo trimestral vinculado. O vínculo é feito na tela do objetivo trimestral.</p>
+        <p class="texto-suave">Nenhum objetivo trimestral vinculado.</p>
       {% endif %}
     </section>
   {% endif %}

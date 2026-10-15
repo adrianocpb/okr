@@ -4,6 +4,7 @@ from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from apps.acompanhamento.grafico import desenhar, serie_do_kr
 from apps.acompanhamento.selectors import atualizacoes_da_iniciativa, checkins_do_kr
 from apps.auditoria.selectors import historico_legivel
 from apps.cadastros import selectors as cadastros
@@ -61,6 +62,7 @@ def objetivo_detalhe(request, pk):
             "form_vinculo": VinculoForm(objetivo=objetivo),
             "krs": selectors.krs_do_objetivo(objetivo),
             "iniciativas": selectors.iniciativas_do_objetivo(objetivo),
+            "desdobramento": selectors.desdobramento_trimestral(objetivo),
             "historico": historico_legivel(objetivo),
         },
     )
@@ -204,6 +206,7 @@ def kr_novo(request, objetivo_pk):
 
 def kr_detalhe(request, pk):
     kr = selectors.obter_kr(escopo_da_requisicao(request), pk)
+    serie = serie_do_kr(kr)
     return render(
         request,
         "okrs/kr_detalhe.html",
@@ -212,6 +215,8 @@ def kr_detalhe(request, pk):
             "objetivo": kr.objetivo,
             "situacao": selectors.situacao_do_kr(kr),
             "checkins": checkins_do_kr(kr),
+            "serie": serie,
+            "desenho": desenhar(serie, timezone.localdate()) if serie.pontos else None,
             "iniciativas": selectors.iniciativas_do_kr(kr),
             "pode_registrar": kr.status != kr.Status.CANCELADO
             and kr.objetivo.status != kr.objetivo.Status.CANCELADO,

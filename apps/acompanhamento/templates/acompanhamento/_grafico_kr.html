@@ -1,0 +1,34 @@
+{# Gráfico de evolução do KR (SVG) com tabela equivalente. Espera `serie` e `desenho`. #}
+<figure class="grafico">
+  <svg viewBox="0 0 {{ desenho.largura }} {{ desenho.altura }}" role="img" aria-labelledby="grafico-titulo grafico-desc" class="grafico__svg">
+    <title id="grafico-titulo">Evolução do KR {{ serie.kr.titulo }}</title>
+    <desc id="grafico-desc">{{ serie.pontos|length }} check-in{{ serie.pontos|length|pluralize }} entre {{ serie.inicio|date:"d/m/Y" }} e {{ serie.fim|date:"d/m/Y" }}. Os valores estão na tabela abaixo do gráfico.</desc>
+    {% for posicao, rotulo in desenho.marcas_y %}
+      <line x1="64" x2="{{ desenho.largura|add:'-16' }}" y1="{{ posicao|stringformat:'s' }}" y2="{{ posicao|stringformat:'s' }}" class="grafico__grade"/>
+      <text x="58" y="{{ posicao|stringformat:'s' }}" class="grafico__eixo" text-anchor="end" dominant-baseline="middle">{{ rotulo }}</text>
+    {% endfor %}
+    {% for posicao, rotulo in desenho.marcas_x %}
+      <text x="{{ posicao|stringformat:'s' }}" y="{{ desenho.altura|add:'-8' }}" class="grafico__eixo" text-anchor="{% if forloop.first %}start{% else %}end{% endif %}">{{ rotulo }}</text>
+    {% endfor %}
+    {% for posicao, referencia in desenho.referencias %}
+      <line x1="64" x2="{{ desenho.largura|add:'-16' }}" y1="{{ posicao|stringformat:'s' }}" y2="{{ posicao|stringformat:'s' }}" class="grafico__referencia"/>
+      <text x="{{ desenho.largura|add:'-18' }}" y="{{ posicao|stringformat:'s' }}" dy="-4" class="grafico__rotulo-referencia" text-anchor="end">{{ referencia.rotulo }}</text>
+    {% endfor %}
+    {% if desenho.hoje_x is not None %}
+      <line x1="{{ desenho.hoje_x|stringformat:'s' }}" x2="{{ desenho.hoje_x|stringformat:'s' }}" y1="16" y2="{{ desenho.altura|add:'-32' }}" class="grafico__hoje"/>
+      <text x="{{ desenho.hoje_x|stringformat:'s' }}" y="12" class="grafico__eixo" text-anchor="middle">hoje</text>
+    {% endif %}
+    {% if desenho.pontos|length > 1 %}<polyline points="{{ desenho.linha }}" class="grafico__linha"/>{% endif %}
+    {% for px, py, ponto in desenho.pontos %}
+      <circle cx="{{ px|stringformat:'s' }}" cy="{{ py|stringformat:'s' }}" r="4" class="grafico__ponto"><title>{{ ponto.data|date:"d/m/Y" }}: {{ ponto.rotulo }} ({{ ponto.status }})</title></circle>
+    {% endfor %}
+  </svg>
+  <figcaption class="texto-suave">Cada ponto é um check-in vigente (retificações substituem o original). Linhas tracejadas: referências atuais do KR.</figcaption>
+  <details>
+    <summary>Ver os valores em tabela</summary>
+    <table class="tabela tabela--compacta">
+      <thead><tr><th scope="col">Data de referência</th><th scope="col">{% if serie.eixo_percentual %}Progresso{% else %}Valor{% endif %}</th><th scope="col">Status</th></tr></thead>
+      <tbody>{% for ponto in serie.pontos %}<tr><td>{{ ponto.data|date:"d/m/Y" }}</td><td>{{ ponto.rotulo }}</td><td>{{ ponto.status }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </details>
+</figure>

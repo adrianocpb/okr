@@ -192,3 +192,48 @@ def iniciativas_do_kr(kr: ResultadoChave, hoje: date | None = None) -> list[Inic
         F("prazo").asc(nulls_last=True), "id"
     )
     return _marcar_atraso(iniciativas, hoje)
+
+
+# ------------------------------------------------- comparação entre períodos
+
+
+def desdobramento_trimestral(objetivo: Objetivo) -> list[dict]:
+    """Objetivos trimestrais vinculados a um objetivo anual, agrupados por trimestre.
+
+    Cada KR aparece com o próprio progresso; não há valor combinado entre KRs nem
+    entre trimestres (as medidas podem ter unidades e naturezas diferentes).
+    """
+    if objetivo.ciclo.tipo != Ciclo.Tipo.ANUAL:
+        return []
+    from apps.acompanhamento.selectors import situacoes_em_lote
+
+    trimestrais = [
+        vinculo.objetivo_trimestral
+        for vinculo in VinculoObjetivo.objects.filter(objetivo_anual=objetivo).select_related(
+            "objetivo_trimestral__ciclo", "objetivo_trimestral__owner"
+        )
+    ]
+    krs = list(
+        ResultadoChave.objects.filter(objetivo__in=trimestrais)
+        .exclude(status=ResultadoChave.Status.CANCELADO)
+        .select_related("objetivo__ciclo")
+        .order_by("id")
+    )
+    situacoes_em_lote(krs)
+    for trimestral in trimestrais:
+        trimestral.krs_lista = [kr for kr in krs if kr.objetivo_id == trimestral.pk]
+
+    colunas = []
+    ciclos = {c.trimestre: c for c in objetivo.ciclo.trimestres.filter(arquivado_em__isnull=True)}
+    for numero, rotulo in Ciclo.TRIMESTRES:
+        colunas.append(
+            {
+                "rotulo": rotulo,
+                "ciclo": ciclos.get(numero),
+                "objetivos": sorted(
+                    (o for o in trimestrais if o.ciclo.trimestre == numero),
+                    key=lambda o: o.chave_titulo,
+                ),
+            }
+        )
+    return colunas
