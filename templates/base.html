@@ -18,6 +18,7 @@
       <a href="{% url 'cadastros:empresa_lista' %}"{% if '/empresas/' in request.path %} aria-current="page"{% endif %}>Empresas</a>
       <a href="{% url 'cadastros:pessoa_lista' %}"{% if '/pessoas/' in request.path %} aria-current="page"{% endif %}>Pessoas</a>
       <a href="{% url 'cadastros:ciclo_lista' %}"{% if '/ciclos/' in request.path %} aria-current="page"{% endif %}>Ciclos</a>
+      <a href="{% url 'auditoria:auditoria_lista' %}"{% if '/auditoria/' in request.path %} aria-current="page"{% endif %}>Auditoria</a>
     </nav>
   </header>
 

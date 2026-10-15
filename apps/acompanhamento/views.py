@@ -4,10 +4,11 @@ from django.utils import timezone
 
 from apps.acompanhamento import services
 from apps.acompanhamento.forms import AtualizacaoIniciativaForm, CheckInForm
+from apps.acompanhamento.linha_do_tempo import CATEGORIAS, linha_do_tempo
 from apps.acompanhamento.models import CheckIn
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
 from apps.core.erros import AcessoNegado
-from apps.core.views_apoio import executar
+from apps.core.views_apoio import executar, pagina
 from apps.okrs import selectors as okrs
 
 
@@ -89,4 +90,23 @@ def atualizacao_nova(request, iniciativa_pk):
         request,
         "acompanhamento/atualizacao_form.html",
         {"form": form, "iniciativa": iniciativa},
+    )
+
+
+def linha_do_tempo_objetivo(request, objetivo_pk):
+    objetivo = okrs.obter_objetivo(escopo_da_requisicao(request), objetivo_pk)
+    categoria = request.GET.get("tipo", "")
+    if categoria not in CATEGORIAS:
+        categoria = ""
+    itens = linha_do_tempo(objetivo, categoria)
+    return render(
+        request,
+        "acompanhamento/linha_do_tempo.html",
+        {
+            "objetivo": objetivo,
+            "pagina": pagina(request, itens),
+            "categoria": categoria,
+            "categorias": CATEGORIAS,
+            "filtros_qs": f"tipo={categoria}" if categoria else "",
+        },
     )

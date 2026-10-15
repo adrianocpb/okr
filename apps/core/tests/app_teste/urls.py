@@ -20,6 +20,7 @@ urlpatterns = [
     path("", include("apps.cadastros.urls")),
     path("", include("apps.okrs.urls")),
     path("", include("apps.acompanhamento.urls")),
+    path("", include("apps.auditoria.urls")),
     path("teste/erro-negocio/", view_erro_de_negocio),
     path("teste/conflito/", view_conflito),
     path("teste/erro-inesperado/", view_erro_inesperado),

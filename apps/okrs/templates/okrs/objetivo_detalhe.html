@@ -13,6 +13,7 @@
   <div class="cabecalho-pagina">
     <h1>{{ objetivo.titulo }}</h1>
     <div class="acoes">
+      <a class="botao" href="{% url 'acompanhamento:linha_do_tempo' objetivo.pk %}">Linha do tempo</a>
       <a class="botao botao--primario" href="{% url 'okrs:objetivo_editar' objetivo.pk %}">Editar</a>
     </div>
   </div>

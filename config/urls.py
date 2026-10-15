@@ -5,4 +5,5 @@ urlpatterns = [
     path("", include("apps.cadastros.urls")),
     path("", include("apps.okrs.urls")),
     path("", include("apps.acompanhamento.urls")),
+    path("", include("apps.auditoria.urls")),
 ]

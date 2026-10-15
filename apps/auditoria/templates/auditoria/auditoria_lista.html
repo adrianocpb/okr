@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block titulo %}Auditoria{% endblock %}
+
+{% block conteudo %}
+  <h1>Auditoria</h1>
+  <p class="introducao">Histórico de alterações estruturais (criação, edição, arquivamento e vínculos). Check-ins e atualizações de iniciativas ficam no histórico de acompanhamento de cada KR, iniciativa e objetivo.</p>
+
+  <form method="get" class="filtros" aria-label="Filtrar auditoria">
+    <label>Tipo de registro
+      <select name="tipo">
+        <option value="">Todos</option>
+        {% for valor, rotulo in tipos.items %}<option value="{{ valor }}"{% if valor == filtros.tipo %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Empresa
+      <select name="empresa">
+        <option value="">Todas</option>
+        {% for empresa in empresas %}<option value="{{ empresa.pk }}"{% if empresa.pk == empresa_id %} selected{% endif %}>{{ empresa.sigla }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Ação
+      <select name="acao">
+        <option value="">Todas</option>
+        {% for valor, rotulo in acoes %}<option value="{{ valor }}"{% if valor == filtros.acao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>De <input type="date" name="de" value="{{ filtros.de }}"></label>
+    <label>Até <input type="date" name="ate" value="{{ filtros.ate }}"></label>
+    <button type="submit" class="botao">Filtrar</button>
+    {% if filtrado %}<a href="{% url 'auditoria:auditoria_lista' %}">Limpar filtros</a>{% endif %}
+  </form>
+
+  {% if entradas %}
+    <ol class="historico cartao">
+      {% for entrada in entradas %}
+        <li class="historico__item">
+          <div class="historico__cabecalho">
+            <span class="selo selo--neutro">{{ entrada.tipo_registro }}</span>
+            <strong>{{ entrada.acao }}</strong>
+            {% if entrada.url_objeto %}<a href="{{ entrada.url_objeto }}">{{ entrada.objeto_descricao }}</a>{% else %}{{ entrada.objeto_descricao }}{% endif %}
+            <span class="texto-suave">em {{ entrada.data_hora|date:"d/m/Y H:i" }} por {{ entrada.autor }}</span>
+            {% if not entrada.autor_verificado %}<span class="selo selo--neutro">autor não verificado</span>{% endif %}
+          </div>
+          {% if entrada.mudancas %}
+            <table class="tabela tabela--compacta">
+              <thead><tr><th scope="col">Campo</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+              <tbody>{% for mudanca in entrada.mudancas %}<tr><td>{{ mudanca.campo }}</td><td>{{ mudanca.antes }}</td><td>{{ mudanca.depois }}</td></tr>{% endfor %}</tbody>
+            </table>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+    {% include "core/_paginacao.html" %}
+  {% else %}
+    <p class="vazio">Nenhum registro encontrado{% if filtrado %} com esses filtros{% endif %}.</p>
+  {% endif %}
+{% endblock %}

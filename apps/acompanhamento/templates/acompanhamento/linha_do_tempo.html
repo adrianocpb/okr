@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block titulo %}Linha do tempo · {{ objetivo.titulo|truncatechars:50 }}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+  </nav>
+  <h1>Linha do tempo <span class="texto-suave">· {{ objetivo.titulo }}</span></h1>
+  <p class="introducao">Acompanhamentos (check-ins e atualizações de iniciativas) e alterações do objetivo, dos KRs e das iniciativas, do mais recente ao mais antigo.</p>
+
+  <nav class="abas" aria-label="Filtrar por tipo">
+    {% for valor, rotulo in categorias.items %}
+      <a href="?{% if valor %}tipo={{ valor }}{% endif %}"{% if valor == categoria %} aria-current="page"{% endif %}>{{ rotulo }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if pagina.object_list %}
+    <ol class="linha-do-tempo">
+      {% for item in pagina.object_list %}
+        <li class="linha-do-tempo__item linha-do-tempo__item--{{ item.categoria }}{% if item.retificado %} checkin--retificado{% endif %}">
+          <div class="checkin__cabecalho">
+            <span class="selo {% if item.acompanhamento %}selo--info{% else %}selo--neutro{% endif %}">{% if item.categoria == "checkin" %}Check-in{% elif item.categoria == "atualizacao" %}Atualização{% else %}Alteração{% endif %}</span>
+            <strong>{% if item.url %}<a href="{{ item.url }}">{{ item.titulo }}</a>{% else %}{{ item.titulo }}{% endif %}</strong>
+            {% if item.retificado %}<span class="selo selo--neutro">Retificado</span>{% endif %}
+            {% if item.retificacao %}<span class="selo selo--info">Retificação</span>{% endif %}
+          </div>
+          <p class="texto-suave">
+            {{ item.momento|date:"d/m/Y H:i" }} · por {{ item.autor }}{% if not item.autor_verificado %} (não verificado){% endif %}
+            {% if item.data_referencia %} · referência {{ item.data_referencia|date:"d/m/Y" }}{% endif %}
+          </p>
+          {% if item.rotulo_status or item.resumo %}<p>{% if item.rotulo_status %}<strong>{{ item.rotulo_status }}</strong>{% endif %}{% if item.resumo %} · {{ item.resumo }}{% endif %}</p>{% endif %}
+          {% for rotulo, texto in item.detalhes %}<p><strong>{{ rotulo }}:</strong> {{ texto|linebreaksbr }}</p>{% endfor %}
+          {% if item.mudancas %}
+            <table class="tabela tabela--compacta">
+              <thead><tr><th scope="col">Campo</th><th scope="col">Antes</th><th scope="col">Depois</th></tr></thead>
+              <tbody>{% for mudanca in item.mudancas %}<tr><td>{{ mudanca.campo }}</td><td>{{ mudanca.antes }}</td><td>{{ mudanca.depois }}</td></tr>{% endfor %}</tbody>
+            </table>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ol>
+    {% include "core/_paginacao.html" %}
+  {% else %}
+    <p class="vazio">Nenhum registro{% if categoria %} deste tipo{% endif %}.</p>
+  {% endif %}
+{% endblock %}

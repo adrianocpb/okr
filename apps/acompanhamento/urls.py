@@ -12,4 +12,9 @@ urlpatterns = [
         views.atualizacao_nova,
         name="atualizacao_nova",
     ),
+    path(
+        "objetivos/<int:objetivo_pk>/linha-do-tempo/",
+        views.linha_do_tempo_objetivo,
+        name="linha_do_tempo",
+    ),
 ]

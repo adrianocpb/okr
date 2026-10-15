@@ -2,7 +2,7 @@
 
 Aplicação web para cadastro, acompanhamento e análise de OKRs (Objectives and Key Results) de múltiplas empresas de um grupo empresarial.
 
-> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). A aplicação roda localmente; históricos consolidados e o painel serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). A aplicação roda localmente, com linha do tempo por objetivo e tela de auditoria; o painel e os gráficos serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
 
 ## Requisitos
 
