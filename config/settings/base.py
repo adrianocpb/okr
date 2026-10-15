@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "apps.cadastros",
     "apps.okrs",
     "apps.acompanhamento",
+    "apps.painel",
 ]
 
 MIDDLEWARE = [

@@ -9,11 +9,11 @@
 <body>
   <a class="pular-conteudo" href="#conteudo">Pular para o conteúdo</a>
   <header class="topo">
-    <div class="topo__marca"><a href="{% url 'core:inicio' %}">OKR do Grupo</a></div>
+    <div class="topo__marca"><a href="{% url 'painel:painel' %}">OKR do Grupo</a></div>
     <nav class="topo__menu" aria-label="Navegação principal">
       {# Os itens de menu entram à medida que cada módulo é entregue (ver docs/PLANO_IMPLEMENTACAO.md). #}
-      {% url 'core:inicio' as url_inicio %}
-      <a href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>Início</a>
+      {% url 'painel:painel' as url_painel %}
+      <a href="{{ url_painel }}"{% if request.path == url_painel %} aria-current="page"{% endif %}>Painel</a>
       <a href="{% url 'okrs:objetivo_lista' %}"{% if '/objetivos/' in request.path %} aria-current="page"{% endif %}>Objetivos</a>
       <a href="{% url 'cadastros:empresa_lista' %}"{% if '/empresas/' in request.path %} aria-current="page"{% endif %}>Empresas</a>
       <a href="{% url 'cadastros:pessoa_lista' %}"{% if '/pessoas/' in request.path %} aria-current="page"{% endif %}>Pessoas</a>
@@ -36,6 +36,7 @@
 
   <footer class="rodape">
     Versão local de desenvolvimento: sem login e acessível apenas neste computador.
+    · <a href="{% url 'core:inicio' %}">Situação do sistema</a>
   </footer>
 </body>
 </html>

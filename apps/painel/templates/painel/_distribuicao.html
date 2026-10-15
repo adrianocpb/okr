@@ -1,0 +1,8 @@
+{# Distribuição de KRs por situação (contagens, nunca média de percentuais). Espera `distribuicao`. #}
+<ul class="distribuicao" aria-label="KRs por situação">
+  {% for codigo, rotulo, quantidade in distribuicao.itens %}
+    <li class="distribuicao__item distribuicao__item--{{ codigo }}"><strong>{{ quantidade }}</strong> {{ rotulo|lower }}</li>
+  {% empty %}
+    <li class="texto-suave">Sem KRs</li>
+  {% endfor %}
+</ul>

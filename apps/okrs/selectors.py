@@ -138,8 +138,9 @@ def krs_do_objetivo(objetivo: Objetivo) -> list[ResultadoChave]:
         .prefetch_related("marcos")
         .order_by("id")
     )
-    for kr in krs:
-        kr.situacao = situacao_do_kr(kr)
+    from apps.acompanhamento.selectors import situacoes_em_lote
+
+    situacoes_em_lote(krs)
     return krs
 
 

@@ -141,6 +141,7 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 |---|---|
 | RF-42 | Visão consolidada de objetivos e KRs, com filtros combináveis por **empresa**, **ciclo**, **período** e **status/situação**. Como cada empresa tem seus ciclos, o filtro **ciclo** lista os ciclos das empresas selecionadas e o filtro **período** usa intervalo de datas (mostra os ciclos que se sobrepõem ao intervalo), o que permite visões entre empresas mesmo com calendários diferentes. [Decisão proposta; ver Q-20] |
 | RF-43 | Cada KR exibe seu progresso **individualmente**, com valor atual, meta e unidade próprios. |
+| RF-43a | O painel é a página inicial [Decisão de implementação na E10]. Padrão: objetivos **ativos** dos ciclos **em andamento hoje**; os filtros permitem outros ciclos, períodos e status, e um filtro adicional por situação de KR. Objetivos aparecem do mais crítico para o menos crítico; alertas são listados do mais grave para o menos grave. |
 | RF-44 | O agrupamento por objetivo, empresa ou ciclo exibe **contagens por situação** (por exemplo, "3 no ritmo, 1 em risco, 1 sem check-in"), **nunca média ou soma de percentuais** de KRs distintos. Não haverá indicador numérico agregado por objetivo [Decidido em Q-09]. |
 | RF-45 | Cada KR exibe uma **cor de progresso** que migra do vermelho ao verde conforme se aproxima da meta (ver 7.5); alertas visuais (ver 7.6) são destacados no dashboard e nas telas de objetivo e KR. [Decidido em Q-12] |
 | RF-46 | Gráfico de evolução de cada KR ao longo dos check-ins, com a meta e a linha de base. |

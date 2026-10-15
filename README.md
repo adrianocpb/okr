@@ -2,7 +2,7 @@
 
 Aplicação web para cadastro, acompanhamento e análise de OKRs (Objectives and Key Results) de múltiplas empresas de um grupo empresarial.
 
-> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). A aplicação roda localmente, com linha do tempo por objetivo e tela de auditoria; o painel e os gráficos serão entregues nas próximas etapas. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). A aplicação roda localmente, com painel (página inicial), linha do tempo por objetivo e tela de auditoria; os gráficos de evolução serão entregues na próxima etapa. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
 
 ## Requisitos
 
@@ -59,6 +59,18 @@ O GitHub Actions executa as mesmas verificações a cada envio (`.github/workflo
 | `OKR_BACKUP_RETENCAO` | Quantos backups diários manter (padrão 30) |
 
 Detalhes em [docs/ARQUITETURA.md](docs/ARQUITETURA.md#8-configuração-de-ambientes).
+
+## Dados fictícios (demonstração e desempenho)
+
+Para experimentar o sistema com volume, gere dados fictícios em um banco **separado** (o comando se recusa a rodar em banco que já tenha empresas):
+
+```powershell
+$env:DATABASE_URL = "sqlite:///var/demonstracao.sqlite3"
+.venv\Scripts\python manage.py migrate
+.venv\Scripts\python manage.py gerar_dados_ficticios --confirmar --objetivos 200 --checkins 3000
+.venv\Scripts\python manage.py runserver 127.0.0.1:8001
+Remove-Item Env:DATABASE_URL   # volta a usar o banco normal
+```
 
 ## Backup e restauração
 

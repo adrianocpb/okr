@@ -196,7 +196,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E9 — Consulta de históricos ✅ (aguardando validação)
+### E9 — Consulta de históricos ✅
 
 **Objetivo:** tornar os dois históricos fáceis de consultar.
 **Dependências:** E7, E8.
@@ -208,7 +208,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E10 — Dashboard, filtros e alertas
+### E10 — Dashboard, filtros e alertas ✅ (aguardando validação)
 
 **Objetivo:** visão consolidada com identificação do que precisa de atenção.
 **Dependências:** E7, E8.
@@ -218,7 +218,8 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 - [ ] Testes de cada regra de alerta, com datas controladas (relógio injetável no domínio).
 - [ ] Teste: combinação de filtros retorna exatamente o conjunto esperado.
 - [ ] Cores e alertas sempre acompanhados de número ou texto (não só cor).
-- [ ] Desempenho: painel com a massa de referência da RNF-13 (gerada por comando de dados fictícios) responde em < 1 s localmente (medido e registrado).
+- [x] Desempenho: painel com a massa de referência da RNF-13 (gerada por comando de dados fictícios) responde em < 1 s localmente (medido e registrado).
+  - Medição em 15/10/2026 (10 empresas, 2.000 objetivos, 6.000 KRs, 50.000 check-ins, SQLite local, comando `gerar_dados_ficticios`): painel padrão 0,17–0,19 s; ano inteiro com todos os status 0,52–0,65 s; filtro por empresa 0,05 s. A primeira medição do ano inteiro (1,6–2,0 s) levou a três otimizações: marcos só para KRs do tipo Marcos, textos montados só para a página exibida e links de alertas gerados só quando exibidos.
 
 ---
 

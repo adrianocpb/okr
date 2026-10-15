@@ -16,6 +16,7 @@ def view_erro_inesperado(request):
 
 
 urlpatterns = [
+    path("", include("apps.painel.urls")),
     path("", include("apps.core.urls")),
     path("", include("apps.cadastros.urls")),
     path("", include("apps.okrs.urls")),
