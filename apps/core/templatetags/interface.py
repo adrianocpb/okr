@@ -23,5 +23,5 @@ def tom_avatar(chave) -> str:
     """Tom estável por registro (a mesma pessoa sempre tem a mesma cor)."""
     try:
         return TONS_AVATAR[int(chave) % len(TONS_AVATAR)]
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return TONS_AVATAR[0]
