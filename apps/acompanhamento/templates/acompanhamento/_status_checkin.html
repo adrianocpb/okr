@@ -1,0 +1,6 @@
+{# Selo do status informado no check-in. Espera `status` (código) e `rotulo`. #}
+{% if status == "no_ritmo" %}<span class="selo selo--ok">{{ rotulo }}</span>
+{% elif status == "atencao" %}<span class="selo selo--alerta">{{ rotulo }}</span>
+{% elif status == "em_risco" %}<span class="selo selo--erro">{{ rotulo }}</span>
+{% elif status == "concluido" %}<span class="selo selo--info">{{ rotulo }}</span>
+{% endif %}

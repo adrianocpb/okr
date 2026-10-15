@@ -23,10 +23,46 @@
     <p class="aviso aviso--alerta">Este KR é medido por marcos, mas ainda não tem marcos cadastrados.</p>
   {% endif %}
 
-  <section class="cartao">
-    <h2>Progresso</h2>
+  <section class="cartao" aria-labelledby="titulo-progresso">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-progresso">Progresso</h2>
+      {% if pode_registrar %}<a class="botao botao--primario" href="{% url 'acompanhamento:checkin_novo' kr.pk %}">Registrar check-in</a>{% endif %}
+    </div>
     {% include "okrs/_progresso.html" %}
-    <p class="texto-suave">O progresso é calculado a partir dos check-ins. O registro de check-ins entra na próxima etapa do desenvolvimento.</p>
+    <dl class="situacao">
+      <dt>Status do último check-in</dt>
+      <dd>{% if situacao.status %}{% include "acompanhamento/_status_checkin.html" with status=situacao.status rotulo=situacao.status_rotulo %} em {{ situacao.data_ultimo_checkin|date:"d/m/Y" }}{% else %}<span class="texto-suave">Nenhum check-in registrado</span>{% endif %}</dd>
+      <dt>Próximo check-in esperado</dt>
+      <dd>{{ situacao.proximo_checkin|date:"d/m/Y" }}{% if situacao.atrasado %} <span class="selo selo--alerta">Atrasado há {{ situacao.dias_em_atraso }} dia{{ situacao.dias_em_atraso|pluralize }}</span>{% endif %}</dd>
+    </dl>
+  </section>
+
+  <section class="cartao" aria-labelledby="titulo-checkins">
+    <h2 id="titulo-checkins">Histórico de check-ins</h2>
+    {% if checkins %}
+      <ol class="checkins">
+        {% for checkin in checkins %}
+          <li class="checkin{% if checkin.retificado %} checkin--retificado{% endif %}">
+            <div class="checkin__cabecalho">
+              <strong>{{ checkin.data_referencia|date:"d/m/Y" }}</strong>
+              {% include "acompanhamento/_status_checkin.html" with status=checkin.status_informado rotulo=checkin.get_status_informado_display %}
+              {% if checkin.retificado %}<span class="selo selo--neutro">Retificado</span>{% endif %}
+              {% if checkin.retifica %}<span class="selo selo--info">Retificação</span>{% endif %}
+              <span class="texto-suave">por {{ checkin.autor_informado.nome }}{% if not checkin.autor_verificado %} (informado, não verificado){% endif %} · registrado em {{ checkin.registrado_em|date:"d/m/Y H:i" }}</span>
+            </div>
+            {% include "okrs/_progresso.html" with situacao=checkin.situacao %}
+            {% if checkin.retifica %}<p><strong>Motivo da retificação:</strong> {{ checkin.justificativa_retificacao|linebreaksbr }}</p>{% endif %}
+            {% if checkin.comentario %}<p><strong>Comentário:</strong> {{ checkin.comentario|linebreaksbr }}</p>{% endif %}
+            {% if checkin.dificuldades %}<p><strong>Dificuldades:</strong> {{ checkin.dificuldades|linebreaksbr }}</p>{% endif %}
+            {% if checkin.proximos_passos %}<p><strong>Próximos passos:</strong> {{ checkin.proximos_passos|linebreaksbr }}</p>{% endif %}
+            {% if checkin.meta_vigente is not None and checkin.meta_vigente != kr.meta %}<p class="texto-suave">Calculado com a meta vigente na época: {{ checkin.meta_vigente|valor_kr:kr }}.</p>{% endif %}
+            {% if not checkin.retificado and pode_registrar %}<p><a href="{% url 'acompanhamento:checkin_retificar' checkin.pk %}">Retificar este check-in</a></p>{% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="texto-suave">Nenhum check-in registrado. A frequência combinada é a cada {{ kr.frequencia_checkin_dias }} dias.</p>
+    {% endif %}
   </section>
 
   <section class="cartao">

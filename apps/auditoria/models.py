@@ -5,18 +5,9 @@ from django.db import models
 from django.utils import timezone
 
 from apps.core.acesso import Origem
+from apps.core.models import RegistroImutavel, SomenteInsercaoQuerySet
 
-
-class RegistroImutavel(Exception):
-    """Tentativa de alterar ou excluir um registro que só admite inserção."""
-
-
-class SomenteInsercaoQuerySet(models.QuerySet):
-    def update(self, **kwargs):
-        raise RegistroImutavel("Registros de auditoria não podem ser alterados.")
-
-    def delete(self):
-        raise RegistroImutavel("Registros de auditoria não podem ser excluídos.")
+__all__ = ["RegistroAlteracao", "RegistroImutavel", "SomenteInsercaoQuerySet"]
 
 
 class RegistroAlteracao(models.Model):

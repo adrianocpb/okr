@@ -149,7 +149,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E6 — KRs, métricas e cálculo de progresso ✅ (aguardando validação)
+### E6 — KRs, métricas e cálculo de progresso ✅
 
 **Objetivo:** KRs com medição flexível e cálculo correto e testado.
 **Dependências:** E5.
@@ -165,7 +165,7 @@ E8 depende de E6 (KRs) e pode correr em paralelo com E7 se for conveniente. E12 
 
 ---
 
-### E7 — Check-ins
+### E7 — Check-ins ✅ (aguardando validação)
 
 **Objetivo:** registro de acompanhamento com histórico imutável.
 **Dependências:** E6.

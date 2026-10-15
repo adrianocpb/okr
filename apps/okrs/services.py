@@ -184,6 +184,8 @@ def remover_marco(marco_id: int, *, ator: Ator, escopo: EscopoAcesso) -> None:
     if marco is None:
         raise ErroDeNegocio("Marco não encontrado.")
     kr = selectors.obter_kr(escopo, marco.kr_id)
+    if marco.itens_checkin.exists():
+        raise ErroDeNegocio("Este marco já foi registrado em check-ins e não pode ser removido.")
     registrar_alteracao(
         objeto=kr,
         acao=Acao.ALTERACAO,

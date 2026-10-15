@@ -1,6 +1,37 @@
 from django.db import models
 
 
+class RegistroImutavel(Exception):
+    """Tentativa de alterar ou excluir um registro que só admite inserção."""
+
+
+class SomenteInsercaoQuerySet(models.QuerySet):
+    """Impede alteração e exclusão em massa de registros somente-inserção."""
+
+    def update(self, **kwargs):
+        raise RegistroImutavel("Este registro não pode ser alterado.")
+
+    def delete(self):
+        raise RegistroImutavel("Este registro não pode ser excluído.")
+
+
+class ModeloSomenteInsercao(models.Model):
+    """Registro que nunca é editado nem excluído pela aplicação (histórico)."""
+
+    objects = SomenteInsercaoQuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None and not self._state.adding:
+            raise RegistroImutavel("Este registro não pode ser alterado.")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        raise RegistroImutavel("Este registro não pode ser excluído.")
+
+
 class ModeloBase(models.Model):
     """Campos comuns às entidades editáveis.
 

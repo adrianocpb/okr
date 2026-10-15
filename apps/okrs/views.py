@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.acompanhamento.selectors import checkins_do_kr
 from apps.auditoria.selectors import historico_legivel
 from apps.cadastros import selectors as cadastros
 from apps.core.acesso import ator_da_requisicao, escopo_da_requisicao
@@ -208,6 +209,9 @@ def kr_detalhe(request, pk):
             "kr": kr,
             "objetivo": kr.objetivo,
             "situacao": selectors.situacao_do_kr(kr),
+            "checkins": checkins_do_kr(kr),
+            "pode_registrar": kr.status != kr.Status.CANCELADO
+            and kr.objetivo.status != kr.objetivo.Status.CANCELADO,
             "marcos": kr.marcos.all(),
             "form_marco": MarcoForm(),
             "historico": historico_legivel(kr),

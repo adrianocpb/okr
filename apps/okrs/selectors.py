@@ -1,15 +1,11 @@
 """Consultas de objetivos, sempre limitadas pelo escopo de acesso."""
 
-from dataclasses import dataclass
-
 from django.db.models import Q, QuerySet
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
 from apps.core.acesso import EscopoAcesso
 from apps.core.erros import AcessoNegado
 from apps.core.texto import chave_busca
-from apps.okrs.dominio.cor import cor_do_progresso
-from apps.okrs.dominio.progresso import Progresso
 from apps.okrs.models import Objetivo, ResultadoChave, VinculoObjetivo
 
 STATUS_FILTRO = {"": "Todos", **dict(Objetivo.Status.choices)}
@@ -108,15 +104,6 @@ def responsabilidades_da_pessoa(escopo: EscopoAcesso, pessoa: Pessoa) -> dict:
 # --------------------------------------------------------------------- KRs
 
 
-@dataclass(frozen=True)
-class SituacaoProgresso:
-    """O que a tela mostra sobre o progresso de um KR."""
-
-    progresso: Progresso | None
-    cor: str
-    texto: str
-
-
 def _krs_visiveis(escopo: EscopoAcesso) -> QuerySet:
     return escopo.filtrar(
         ResultadoChave.objects.select_related(
@@ -138,15 +125,19 @@ def krs_do_objetivo(objetivo: Objetivo) -> list[ResultadoChave]:
 
     Cada KR é exibido individualmente; não há soma nem média entre KRs (Q-09).
     """
-    krs = list(objetivo.krs.select_related("responsavel").prefetch_related("marcos").order_by("id"))
+    krs = list(
+        objetivo.krs.select_related("responsavel", "objetivo__ciclo")
+        .prefetch_related("marcos")
+        .order_by("id")
+    )
     for kr in krs:
         kr.situacao = situacao_do_kr(kr)
     return krs
 
 
-def situacao_do_kr(kr: ResultadoChave) -> SituacaoProgresso:
-    """Progresso atual do KR. Sem check-in registrado, é exibido em cinza.
+def situacao_do_kr(kr: ResultadoChave):
+    """Progresso atual do KR, a partir do check-in vigente (cinza se não houver)."""
+    # Importação local: o módulo de acompanhamento depende dos modelos de OKRs.
+    from apps.acompanhamento.selectors import situacao_do_kr as situacao
 
-    Os check-ins (E7) fornecerão o valor medido; até lá, todo KR está sem check-in.
-    """
-    return SituacaoProgresso(progresso=None, cor=cor_do_progresso(None), texto="Sem check-in")
+    return situacao(kr)

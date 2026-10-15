@@ -296,10 +296,17 @@ class ResultadoChave(ModeloBase):
 
         erros = {}
         anterior = (
-            ResultadoChave.objects.filter(pk=self.pk).values("responsavel_id").first()
+            ResultadoChave.objects.filter(pk=self.pk)
+            .values("responsavel_id", "tipo_medicao")
+            .first()
             if self.pk
             else None
         ) or {}
+        if anterior and self.tipo_medicao != anterior["tipo_medicao"] and self.checkins.exists():
+            erros["tipo_medicao"] = (
+                "O tipo de medição não pode mudar depois de registrados check-ins. "
+                "Cancele este KR e crie outro, preservando o histórico."
+            )
         if self.responsavel_id and self.responsavel_id != anterior.get("responsavel_id"):
             problema = problema_do_responsavel(
                 self.responsavel, self.objetivo.empresa_id if self.objetivo_id else None

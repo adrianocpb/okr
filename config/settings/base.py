@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "apps.auditoria",
     "apps.cadastros",
     "apps.okrs",
+    "apps.acompanhamento",
 ]
 
 MIDDLEWARE = [

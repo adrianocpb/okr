@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load okrs_formato %}
+
+{% block titulo %}{% if original %}Retificar check-in{% else %}Novo check-in{% endif %}{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_detalhe' kr.objetivo.pk %}">{{ kr.objetivo.titulo|truncatechars:50 }}</a> ›
+    <a href="{% url 'okrs:kr_detalhe' kr.pk %}">{{ kr.titulo|truncatechars:50 }}</a>
+  </nav>
+  <h1>{% if original %}Retificar check-in{% else %}Novo check-in{% endif %}</h1>
+
+  <section class="cartao">
+    <dl class="situacao">
+      <dt>KR</dt><dd>{{ kr.titulo }}</dd>
+      <dt>Medição</dt><dd>{{ kr|resumo_medicao }}</dd>
+      <dt>Ciclo</dt><dd>{{ kr.objetivo.ciclo.rotulo }} ({{ kr.objetivo.ciclo.periodo }})</dd>
+      {% if original %}<dt>Data de referência</dt><dd>{{ original.data_referencia|date:"d/m/Y" }} (mantida do check-in original)</dd>{% endif %}
+    </dl>
+  </section>
+
+  {% if original %}
+    <p class="aviso aviso--neutro">Check-ins não são editados. A retificação cria um novo registro com os dados corrigidos; o original continua visível no histórico, marcado como retificado.</p>
+  {% endif %}
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for campo in form %}
+      {% include "core/_campo.html" with campo=campo %}
+    {% endfor %}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">{% if original %}Registrar retificação{% else %}Registrar check-in{% endif %}</button>
+      <a class="botao" href="{% url 'okrs:kr_detalhe' kr.pk %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

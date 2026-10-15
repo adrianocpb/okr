@@ -132,6 +132,8 @@ Oferecer uma aplicação web para cadastrar, organizar, acompanhar e analisar a 
 | RF-39 | Sem autenticação, o autor é **selecionado manualmente** entre as pessoas e exibido como "informado, não verificado". Com autenticação, o sistema também registra o usuário autenticado, e só então o autor aparece como verificado. |
 | RF-40 | A data/hora de registro é atribuída pelo sistema e não é editável. A data de referência é informada pelo usuário e não pode ser futura. |
 | RF-41 | Histórico de check-ins do KR em ordem cronológica, com valores, status, comentários e autor. |
+| RF-41a | **Progresso atual × histórico** [Decisão de implementação na E7]: o progresso atual do KR aplica o valor do check-in vigente à configuração **atual** do KR (se a meta mudou, o efeito aparece imediatamente); cada check-in do histórico mantém o cálculo com a medição **da sua época** (cópia gravada no registro). |
+| RF-41b | Check-ins não entram no histórico de alterações estruturais; formam um histórico próprio. Check-ins não são aceitos em KR ou objetivo cancelado. Um marco já registrado em check-in não pode ser removido. |
 
 ### 3.8. Dashboard, visualizações e alertas
 

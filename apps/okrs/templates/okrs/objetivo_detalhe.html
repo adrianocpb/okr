@@ -48,7 +48,7 @@
     {% if krs %}
       <p class="texto-suave">Cada KR tem sua própria medida e seu próprio progresso; os percentuais não são somados entre KRs.</p>
       <table class="tabela tabela--krs">
-        <thead><tr><th scope="col">KR</th><th scope="col">Responsável</th><th scope="col">Medição</th><th scope="col">Progresso</th><th scope="col">Status</th></tr></thead>
+        <thead><tr><th scope="col">KR</th><th scope="col">Responsável</th><th scope="col">Medição</th><th scope="col">Progresso</th><th scope="col">Último check-in</th><th scope="col">Status do KR</th></tr></thead>
         <tbody>
           {% for kr in krs %}
             <tr>
@@ -56,6 +56,10 @@
               <td>{{ kr.responsavel.nome }}</td>
               <td>{{ kr|resumo_medicao }}</td>
               <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
+              <td>
+                {% if kr.situacao.status %}{% include "acompanhamento/_status_checkin.html" with status=kr.situacao.status rotulo=kr.situacao.status_rotulo %} <span class="texto-suave">{{ kr.situacao.data_ultimo_checkin|date:"d/m" }}</span>{% else %}<span class="texto-suave">—</span>{% endif %}
+                {% if kr.situacao.atrasado %}<span class="selo selo--alerta">Check-in atrasado</span>{% endif %}
+              </td>
               <td>{% include "okrs/_kr_status.html" %}</td>
             </tr>
           {% endfor %}

@@ -261,3 +261,12 @@ input[type="text"], input[type="search"], input[type="email"], input[type="numbe
 .campo .helptext { font-size: 0.85rem; color: var(--cor-texto-suave); }
 .ajuda { margin: 8px 0 16px; font-size: 0.9rem; }
 .ajuda summary { cursor: pointer; color: var(--cor-marca); }
+
+/* ---------- Check-ins (E7) ---------- */
+.checkins { list-style: none; padding: 0; margin: 0; }
+.checkin { padding: 12px 0; border-bottom: 1px solid var(--cor-borda); }
+.checkin:last-child { border-bottom: 0; }
+.checkin p { margin: 6px 0; }
+.checkin__cabecalho { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 6px; }
+.checkin--retificado { opacity: 0.65; }
+.checkin--retificado .checkin__cabecalho strong { text-decoration: line-through; }

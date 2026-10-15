@@ -4,4 +4,5 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("", include("apps.cadastros.urls")),
     path("", include("apps.okrs.urls")),
+    path("", include("apps.acompanhamento.urls")),
 ]
