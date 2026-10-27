@@ -289,7 +289,7 @@ def test_fluxo_de_iniciativa_pelas_telas(client, alfa, objetivo, monkeypatch):
     conteudo = resposta.content.decode()
     assert "Atualização registrada." in conteudo
     assert "Treinamento realizado" in conteudo
-    assert "(informado, não verificado)" in conteudo
+    assert "registrado por Admin Teste" in conteudo
 
     objetivo_html = client.get(
         reverse("okrs:objetivo_detalhe", args=[objetivo.pk])

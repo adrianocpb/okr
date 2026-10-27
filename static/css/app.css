@@ -55,6 +55,7 @@
   --radius-lg: 8px;
   --radius-pill: 9999px;
   --sidebar-width: 260px;
+  --sidebar-collapsed: 76px;
   --navbar-height: 56px;
   --control-height: 38px;
   --control-height-sm: 30px;
@@ -309,6 +310,26 @@ code {
 }
 
 .menu-lateral__fundo { display: none; }
+
+/* Menu recolhido (só em telas largas; a escolha fica salva no navegador) */
+.botao-icone.menu-lateral__recolher { display: none; }
+.menu-lateral__recolher .icone { transition: transform 0.2s ease; }
+.navegacao__item, .marca__nome, .navegacao__grupo { white-space: nowrap; }
+@media (min-width: 1200px) {
+  .botao-icone.menu-lateral__recolher { display: inline-flex; color: var(--text-body); }
+  .menu-lateral, .pagina { transition: width 0.2s ease, margin-left 0.2s ease; }
+  :root[data-menu="recolhido"] .menu-lateral { width: var(--sidebar-collapsed); overflow-x: hidden; }
+  :root[data-menu="recolhido"] .pagina { margin-left: var(--sidebar-collapsed); }
+  :root[data-menu="recolhido"] .menu-lateral__marca { justify-content: center; padding: 0; }
+  :root[data-menu="recolhido"] .marca { display: none; }
+  :root[data-menu="recolhido"] .menu-lateral__recolher .icone { transform: rotate(180deg); }
+  :root[data-menu="recolhido"] .navegacao { padding: 0 var(--space-3); }
+  :root[data-menu="recolhido"] .navegacao__item { justify-content: center; padding: 0; }
+  :root[data-menu="recolhido"] .navegacao__rotulo {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  :root[data-menu="recolhido"] .navegacao__grupo { height: 1px; margin: var(--space-3) var(--space-2); padding: 0; overflow: hidden; background: var(--border); color: transparent; }
+}
 
 @media (max-width: 1199px) {
   .menu-lateral { transform: translateX(-100%); transition: transform 0.2s ease; box-shadow: var(--shadow-md); }
@@ -727,3 +748,20 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); widt
 .objetivo-linha__secao { font-size: 15px; margin: 14px 0 6px; }
 .mini-grafico { width: 220px; max-width: 100%; height: 56px; display: block; }
 @media (max-width: 700px) { .objetivo-linha__conteudo { padding-left: var(--space-4); } }
+
+/* ---------- Contas: entrada e usuários ---------- */
+.entrada { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-4); background: var(--bg-body); }
+.entrada__cartao { width: 100%; max-width: 420px; }
+.entrada__cartao h1 { margin: var(--space-4) 0; font-size: 22px; }
+.entrada__marca { display: flex; align-items: center; gap: var(--space-2); }
+.entrada__cartao .formulario input { width: 100%; }
+.entrada__botao { width: 100%; justify-content: center; }
+.entrada__ajuda { margin: var(--space-4) 0 0; font-size: 13px; color: var(--text-muted); }
+.dados-acesso { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+.dados-acesso dt { font-weight: 500; color: var(--text-heading); }
+.dados-acesso dd { margin: 0; overflow-wrap: anywhere; }
+.dados-acesso code { font-size: 15px; user-select: all; }
+.tabela__acoes { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; }
+.barra-topo__usuario { display: flex; align-items: center; gap: var(--space-2); }
+.barra-topo__usuario form { margin: 0; }
+@media (max-width: 640px) { .barra-topo__nome { display: none; } }

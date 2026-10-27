@@ -1,8 +1,8 @@
 """Configurações de produção (servidor).
 
-Ainda não há implantação: este módulo existe para que as exigências mínimas de
-segurança sejam verificadas desde já. Ele recusa iniciar com configuração
-insegura. Não lê `.env`; as variáveis vêm do ambiente do servidor.
+Usado na publicação no Fly.io (ver docs/PUBLICAR-FLY.md). Recusa iniciar com
+configuração insegura. Não lê `.env`; as variáveis vêm do ambiente do servidor
+(fly.toml e `fly secrets`).
 """
 
 from django.core.exceptions import ImproperlyConfigured
@@ -10,7 +10,7 @@ from django.core.exceptions import ImproperlyConfigured
 from config import env
 
 from .base import *  # noqa: F403
-from .base import ALLOWED_HOSTS, SECRET_KEY
+from .base import ALLOWED_HOSTS, DATABASES, MIDDLEWARE, SECRET_KEY
 
 if env.booleano("DJANGO_DEBUG", padrao=False):
     raise ImproperlyConfigured("DJANGO_DEBUG não pode estar ativo em produção.")
@@ -24,8 +24,32 @@ if not SECRET_KEY or len(SECRET_KEY) < 50 or SECRET_KEY.startswith(("inseguro", 
 if not ALLOWED_HOSTS:
     raise ImproperlyConfigured("DJANGO_ALLOWED_HOSTS deve listar os domínios do servidor.")
 
-# HTTPS obrigatório e cookies protegidos.
+CSRF_TRUSTED_ORIGINS = [f"https://{host}" for host in ALLOWED_HOSTS if not host.startswith(".")]
+
+# Arquivos estáticos servidos pela aplicação, com nomes versionados e compressão.
+MIDDLEWARE = [
+    MIDDLEWARE[0],
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    *MIDDLEWARE[1:],
+]
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+}
+
+# SQLite no disco permanente do servidor: mesmos ajustes do ambiente local.
+if DATABASES["default"]["ENGINE"] == "django.db.backends.sqlite3":
+    DATABASES["default"].setdefault("OPTIONS", {}).update(
+        {
+            "init_command": "PRAGMA journal_mode=WAL; PRAGMA busy_timeout=5000;",
+            "transaction_mode": "IMMEDIATE",
+        }
+    )
+
+# HTTPS obrigatório e cookies protegidos. A verificação de saúde do Fly.io chega
+# por HTTP interno e fica fora do redirecionamento.
 SECURE_SSL_REDIRECT = True
+SECURE_REDIRECT_EXEMPT = [r"^saude/$"]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novo usuário{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'contas:usuario_lista' %}">Usuários</a></nav>
+  <h1>Novo usuário</h1>
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <p class="helptext">O sistema gera uma senha temporária, mostrada uma única vez na próxima tela. No primeiro acesso, a pessoa cria a própria senha.</p>
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Criar usuário</button>
+      <a class="botao" href="{% url 'contas:usuario_lista' %}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

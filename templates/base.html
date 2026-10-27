@@ -3,13 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titulo %}Início{% endblock %} · OKR do Grupo</title>
-  {# Aplica o tema salvo antes da pintura, para não piscar. Sem escolha salva, segue o sistema operacional. #}
+  <title>{% block titulo %}Início{% endblock %} · Gestão OKR</title>
+  {# Aplica o tema e o estado do menu salvos antes da pintura, para não piscar. Sem escolha salva, segue o sistema operacional. #}
   <script>
     (function () {
       try {
         var tema = localStorage.getItem("rc-tema");
         if (tema === "claro" || tema === "escuro") document.documentElement.dataset.tema = tema;
+        if (localStorage.getItem("rc-menu") === "recolhido") document.documentElement.dataset.menu = "recolhido";
       } catch (e) {}
     })();
   </script>
@@ -26,23 +27,27 @@
       <a href="{{ url_painel }}" class="marca">
         <img class="marca__logo marca__logo--claro" src="{% static 'img/rcplus-logo-black.png' %}" alt="RC+" width="60" height="32">
         <img class="marca__logo marca__logo--escuro" src="{% static 'img/rcplus-logo-white.png' %}" alt="" width="60" height="32">
-        <span class="marca__nome">OKR do Grupo</span>
+        <span class="marca__nome">Gestão OKR</span>
       </a>
       <button type="button" class="botao-icone menu-lateral__fechar" data-fechar-menu aria-label="Fechar menu">{% include "_icone.html" with nome="fechar" %}</button>
+      <button type="button" class="botao-icone menu-lateral__recolher" data-recolher-menu aria-controls="menu-lateral" aria-expanded="true" aria-label="Recolher menu" title="Recolher menu">{% include "_icone.html" with nome="recolher" %}</button>
     </div>
     <nav class="navegacao" aria-label="Navegação principal">
       {# Os itens de menu entram à medida que cada módulo é entregue (ver docs/PLANO_IMPLEMENTACAO.md). #}
       <p class="navegacao__grupo">Gestão</p>
-      <a class="navegacao__item" href="{{ url_painel }}"{% if request.path == url_painel %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="painel" %}Painel</a>
-      <a class="navegacao__item" href="{% url 'okrs:objetivo_lista' %}"{% if '/objetivos/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="alvo" %}Objetivos</a>
+      <a class="navegacao__item" href="{{ url_painel }}"{% if request.path == url_painel %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="painel" %}<span class="navegacao__rotulo">Painel</span></a>
+      <a class="navegacao__item" href="{% url 'okrs:objetivo_lista' %}"{% if '/objetivos/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="alvo" %}<span class="navegacao__rotulo">Objetivos</span></a>
       <p class="navegacao__grupo">Cadastros</p>
-      <a class="navegacao__item" href="{% url 'cadastros:empresa_lista' %}"{% if '/empresas/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="empresa" %}Empresas</a>
-      <a class="navegacao__item" href="{% url 'cadastros:pessoa_lista' %}"{% if '/pessoas/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="pessoas" %}Pessoas</a>
-      <a class="navegacao__item" href="{% url 'cadastros:ciclo_lista' %}"{% if '/ciclos/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="ciclo" %}Ciclos</a>
+      <a class="navegacao__item" href="{% url 'cadastros:empresa_lista' %}"{% if '/empresas/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="empresa" %}<span class="navegacao__rotulo">Empresas</span></a>
+      <a class="navegacao__item" href="{% url 'cadastros:pessoa_lista' %}"{% if '/pessoas/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="pessoas" %}<span class="navegacao__rotulo">Pessoas</span></a>
+      <a class="navegacao__item" href="{% url 'cadastros:ciclo_lista' %}"{% if '/ciclos/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="ciclo" %}<span class="navegacao__rotulo">Ciclos</span></a>
       <p class="navegacao__grupo">Sistema</p>
-      <a class="navegacao__item" href="{% url 'auditoria:auditoria_lista' %}"{% if '/auditoria/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="auditoria" %}Auditoria</a>
+      <a class="navegacao__item" href="{% url 'auditoria:auditoria_lista' %}"{% if '/auditoria/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="auditoria" %}<span class="navegacao__rotulo">Auditoria</span></a>
+      {% if user.administrador %}
+        <a class="navegacao__item" href="{% url 'contas:usuario_lista' %}"{% if '/usuarios/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="pessoas" %}<span class="navegacao__rotulo">Usuários</span></a>
+      {% endif %}
       {% url 'core:inicio' as url_inicio %}
-      <a class="navegacao__item" href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="sistema" %}Situação do sistema</a>
+      <a class="navegacao__item" href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="sistema" %}<span class="navegacao__rotulo">Situação do sistema</span></a>
     </nav>
   </aside>
   <div class="menu-lateral__fundo" data-fechar-menu hidden></div>
@@ -50,9 +55,17 @@
   <div class="pagina">
     <header class="barra-topo">
       <button type="button" class="botao-icone barra-topo__menu" data-abrir-menu aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menu">{% include "_icone.html" with nome="menu" %}</button>
-      <span class="barra-topo__contexto">OKR do Grupo</span>
+      <span class="barra-topo__contexto">Gestão OKR</span>
       <div class="barra-topo__acoes">
-        <span class="selo selo--neutro" title="Sem login, acessível apenas neste computador.">Ambiente local</span>
+        {% if user.is_authenticated %}
+          <div class="barra-topo__usuario">
+            <a class="barra-topo__nome" href="{% url 'contas:trocar_senha' %}" title="Trocar minha senha">{{ user.nome_exibicao }}</a>
+            <form method="post" action="{% url 'contas:sair' %}">
+              {% csrf_token %}
+              <button type="submit" class="botao botao--fantasma">Sair</button>
+            </form>
+          </div>
+        {% endif %}
         <button type="button" class="botao-icone" data-alternar-tema aria-label="Alternar tema claro/escuro">
           <span class="tema-icone tema-icone--sol">{% include "_icone.html" with nome="sol" %}</span>
           <span class="tema-icone tema-icone--lua">{% include "_icone.html" with nome="lua" %}</span>
@@ -73,7 +86,7 @@
     </main>
 
     <footer class="rodape">
-      Versão local de desenvolvimento: sem login e acessível apenas neste computador.
+      Gestão OKR · protótipo em validação
       · <a href="{% url 'core:inicio' %}">Situação do sistema</a>
     </footer>
   </div>

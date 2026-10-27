@@ -31,8 +31,9 @@ def test_conflito_de_versao_retorna_409_com_orientacao(client):
 
 
 @override_settings(DEBUG=False)
-def test_erro_inesperado_mostra_pagina_500_em_portugues():
+def test_erro_inesperado_mostra_pagina_500_em_portugues(usuario_admin):
     cliente = Client(raise_request_exception=False)
+    cliente.force_login(usuario_admin)
 
     resposta = cliente.get("/teste/erro-inesperado/")
 

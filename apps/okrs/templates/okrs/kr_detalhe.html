@@ -57,7 +57,7 @@
               {% include "acompanhamento/_status_checkin.html" with status=checkin.status_informado rotulo=checkin.get_status_informado_display %}
               {% if checkin.retificado %}<span class="selo selo--neutro">Retificado</span>{% endif %}
               {% if checkin.retifica %}<span class="selo selo--info">Retificação</span>{% endif %}
-              <span class="texto-suave">por {{ checkin.autor_informado.nome }}{% if not checkin.autor_verificado %} (informado, não verificado){% endif %} · registrado em {{ checkin.registrado_em|date:"d/m/Y H:i" }}</span>
+              <span class="texto-suave">por {{ checkin.autor_informado.nome }}{% if checkin.autor_verificado %} · registrado por {{ checkin.registrado_por.nome_exibicao }}{% else %} (informado, não verificado) · registrado{% endif %} em {{ checkin.registrado_em|date:"d/m/Y H:i" }}</span>
             </div>
             {% include "okrs/_progresso.html" with situacao=checkin.situacao %}
             {% if checkin.retifica %}<p><strong>Motivo da retificação:</strong> {{ checkin.justificativa_retificacao|linebreaksbr }}</p>{% endif %}

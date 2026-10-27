@@ -1,0 +1,42 @@
+{% load static %}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar · Gestão OKR</title>
+  <script>
+    (function () {
+      try {
+        var tema = localStorage.getItem("rc-tema");
+        if (tema === "claro" || tema === "escuro") document.documentElement.dataset.tema = tema;
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="entrada">
+  <main class="entrada__cartao cartao">
+    <div class="marca entrada__marca">
+      <img class="marca__logo marca__logo--claro" src="{% static 'img/rcplus-logo-black.png' %}" alt="RC+" width="60" height="32">
+      <img class="marca__logo marca__logo--escuro" src="{% static 'img/rcplus-logo-white.png' %}" alt="" width="60" height="32">
+      <span class="marca__nome">Gestão OKR</span>
+    </div>
+    <h1>Entrar</h1>
+    {% if messages %}
+      <ul class="mensagens" role="status">
+        {% for mensagem in messages %}<li class="mensagem mensagem--{{ mensagem.tags }}">{{ mensagem }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    <form method="post" class="formulario" novalidate>
+      {% csrf_token %}
+      {% if bloqueio %}<ul class="errorlist nonfield" role="alert"><li>{{ bloqueio }}</li></ul>{% endif %}
+      {{ form }}
+      <input type="hidden" name="next" value="{{ next }}">
+      <div class="acoes">
+        <button type="submit" class="botao botao--primario entrada__botao">Entrar</button>
+      </div>
+    </form>
+    <p class="entrada__ajuda">Não tem acesso ou esqueceu a senha? Fale com o administrador do sistema.</p>
+  </main>
+</body>
+</html>

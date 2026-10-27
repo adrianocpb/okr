@@ -1,9 +1,10 @@
 """Quem está agindo (Ator) e o que pode acessar (EscopoAcesso).
 
 Todos os services recebem um `Ator`, e todos os selectors de dados de empresa
-recebem um `EscopoAcesso`. Na versão local, sem login, usa-se `Ator.local()` e
-`EscopoAcesso.todas()`. Quando a autenticação existir (E13), esses objetos
-passam a ser construídos a partir do usuário autenticado, sem mudar as regras.
+recebem um `EscopoAcesso`. Com login, o `Ator` vem do usuário autenticado; o
+`Ator.local()` fica para requisições sem usuário (por exemplo, nos testes de
+services). O escopo ainda cobre todas as empresas: a restrição por empresa e
+os perfis com permissões diferentes ficam para a etapa completa (E13).
 """
 
 from __future__ import annotations
@@ -77,14 +78,17 @@ class EscopoAcesso:
 
 
 def ator_da_requisicao(request) -> Ator:
-    """Quem está agindo. Sem login (versão local), é sempre o usuário local."""
+    """Quem está agindo: o usuário autenticado, ou o usuário local sem login."""
+    usuario = getattr(request, "user", None)
+    if usuario is not None and usuario.is_authenticated:
+        return Ator(descricao=usuario.nome_exibicao, usuario_id=usuario.pk)
     return Ator.local()
 
 
 def escopo_da_requisicao(request) -> EscopoAcesso:
-    """Empresas acessíveis. Sem login (versão local), todas.
+    """Empresas acessíveis. Por enquanto, todas para qualquer usuário autenticado.
 
-    Na etapa de autenticação (E13), estas duas funções passam a derivar o ator e
-    o escopo do usuário autenticado; views e services não precisam mudar.
+    Na etapa completa de autenticação (E13), o escopo passa a derivar das
+    empresas autorizadas do usuário; views e services não precisam mudar.
     """
     return EscopoAcesso.todas()

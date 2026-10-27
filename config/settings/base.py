@@ -34,6 +34,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Todas as rotas exigem login, exceto as marcadas com @login_not_required.
+    "django.contrib.auth.middleware.LoginRequiredMiddleware",
+    "apps.contas.middleware.TrocaDeSenhaObrigatoriaMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "apps.core.middleware.ErroDeNegocioMiddleware",
@@ -64,6 +67,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Modelo de usuário próprio desde a primeira migração (ver docs/ARQUITETURA.md §4).
 AUTH_USER_MODEL = "contas.Usuario"
+
+LOGIN_URL = "contas:entrar"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "contas:entrar"
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 14  # 14 dias
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

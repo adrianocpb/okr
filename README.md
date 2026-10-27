@@ -26,11 +26,16 @@ Copy-Item .env.example .env
 # 3. Criar ou atualizar o banco (fica em var\okr.sqlite3, fora do Git)
 .venv\Scripts\python manage.py migrate
 
-# 4. Iniciar
+# 4. Criar sua conta de Administrador (uma vez; mostra uma senha temporária)
+.venv\Scripts\python manage.py criar_administrador --email voce@empresa.com --nome "Seu Nome"
+
+# 5. Iniciar
 .venv\Scripts\python manage.py runserver 127.0.0.1:8000
 ```
 
-Acesse <http://127.0.0.1:8000>. A página inicial mostra se o banco está conectado e com a estrutura atualizada.
+Acesse <http://127.0.0.1:8000> e entre com o e-mail e a senha temporária; no primeiro acesso o sistema pede uma senha nova. As demais contas são criadas pelo Administrador no menu **Usuários**.
+
+Para publicar no Fly.io, veja [docs/PUBLICAR-FLY.md](docs/PUBLICAR-FLY.md).
 
 ## Testes e qualidade
 

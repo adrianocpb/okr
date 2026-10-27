@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block titulo %}Senha temporária{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha"><a href="{% url 'contas:usuario_lista' %}">Usuários</a></nav>
+  <h1>{% if nova_conta %}Usuário criado{% else %}Senha redefinida{% endif %}</h1>
+  <div class="cartao formulario">
+    <p>Envie estes dados para <strong>{{ usuario.nome_exibicao }}</strong>. A senha temporária <strong>não será mostrada de novo</strong>; no primeiro acesso, a pessoa cria a própria senha.</p>
+    <dl class="dados-acesso">
+      <dt>Endereço</dt><dd><code>{{ endereco }}</code></dd>
+      <dt>E-mail</dt><dd><code>{{ usuario.email }}</code></dd>
+      <dt>Senha temporária</dt><dd><code>{{ senha }}</code></dd>
+    </dl>
+    <div class="acoes">
+      <a class="botao botao--primario" href="{% url 'contas:usuario_lista' %}">Voltar para usuários</a>
+    </div>
+  </div>
+{% endblock %}
