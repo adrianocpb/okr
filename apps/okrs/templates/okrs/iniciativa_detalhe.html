@@ -48,7 +48,7 @@
             <div class="checkin__cabecalho">
               <strong>{{ atualizacao.data_referencia|date:"d/m/Y" }}</strong>
               <span class="selo selo--neutro">{{ atualizacao.get_status_display }}</span>
-              <span class="texto-suave">por {{ atualizacao.autor_informado.nome }}{% if not atualizacao.autor_verificado %} (informado, não verificado){% endif %} · registrado em {{ atualizacao.registrado_em|date:"d/m/Y H:i" }}</span>
+              <span class="texto-suave">por {{ atualizacao.autor_informado.nome }}{% if atualizacao.autor_verificado %} · registrado por {{ atualizacao.registrado_por.nome_exibicao }}{% else %} (informado, não verificado) · registrado{% endif %} em {{ atualizacao.registrado_em|date:"d/m/Y H:i" }}</span>
             </div>
             {% if atualizacao.comentario %}<p><strong>Comentário:</strong> {{ atualizacao.comentario|linebreaksbr }}</p>{% endif %}
             {% if atualizacao.dificuldades %}<p><strong>Dificuldades:</strong> {{ atualizacao.dificuldades|linebreaksbr }}</p>{% endif %}

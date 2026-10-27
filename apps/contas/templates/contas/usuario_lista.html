@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load interface %}
+
+{% block titulo %}Usuários{% endblock %}
+
+{% block conteudo %}
+  <div class="cabecalho-pagina">
+    <h1>Usuários</h1>
+    <a class="botao botao--primario" href="{% url 'contas:usuario_novo' %}">{% include "_icone.html" with nome="mais" %}Novo usuário</a>
+  </div>
+
+  <table class="tabela">
+    <thead>
+      <tr>
+        <th scope="col">Nome</th>
+        <th scope="col">E-mail</th>
+        <th scope="col">Perfil</th>
+        <th scope="col">Último acesso</th>
+        <th scope="col">Situação</th>
+        <th scope="col">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for usuario in usuarios %}
+        <tr>
+          <td><div class="usuario"><span class="avatar avatar--{{ usuario.pk|tom_avatar }}" aria-hidden="true">{{ usuario.nome_exibicao|iniciais }}</span><strong>{{ usuario.nome_exibicao }}</strong></div></td>
+          <td>{{ usuario.email }}</td>
+          <td>{% if usuario.administrador %}Administrador{% else %}Usuário{% endif %}</td>
+          <td>{% if usuario.last_login %}{{ usuario.last_login|date:"d/m/Y H:i" }}{% elif usuario.deve_trocar_senha %}Ainda não acessou{% else %}—{% endif %}</td>
+          <td>{% if usuario.is_active %}<span class="selo selo--ok">Ativo</span>{% else %}<span class="selo selo--neutro">Desativado</span>{% endif %}</td>
+          <td class="tabela__acoes">
+            {% if usuario.is_active %}
+              <form method="post" action="{% url 'contas:usuario_redefinir_senha' usuario.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="botao botao--fantasma">Redefinir senha</button>
+              </form>
+            {% endif %}
+            {% if usuario.pk != request.user.pk %}
+              <form method="post" action="{% url 'contas:usuario_ativo' usuario.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="ativo" value="{% if usuario.is_active %}0{% else %}1{% endif %}">
+                <button type="submit" class="botao botao--fantasma">{% if usuario.is_active %}Desativar{% else %}Reativar{% endif %}</button>
+              </form>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

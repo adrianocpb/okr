@@ -7,4 +7,5 @@ urlpatterns = [
     path("", include("apps.okrs.urls")),
     path("", include("apps.acompanhamento.urls")),
     path("", include("apps.auditoria.urls")),
+    path("", include("apps.contas.urls")),
 ]

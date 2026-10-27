@@ -748,3 +748,20 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); widt
 .objetivo-linha__secao { font-size: 15px; margin: 14px 0 6px; }
 .mini-grafico { width: 220px; max-width: 100%; height: 56px; display: block; }
 @media (max-width: 700px) { .objetivo-linha__conteudo { padding-left: var(--space-4); } }
+
+/* ---------- Contas: entrada e usuários ---------- */
+.entrada { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-4); background: var(--bg-body); }
+.entrada__cartao { width: 100%; max-width: 420px; }
+.entrada__cartao h1 { margin: var(--space-4) 0; font-size: 22px; }
+.entrada__marca { display: flex; align-items: center; gap: var(--space-2); }
+.entrada__cartao .formulario input { width: 100%; }
+.entrada__botao { width: 100%; justify-content: center; }
+.entrada__ajuda { margin: var(--space-4) 0 0; font-size: 13px; color: var(--text-muted); }
+.dados-acesso { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-2) var(--space-4); margin: var(--space-4) 0; }
+.dados-acesso dt { font-weight: 500; color: var(--text-heading); }
+.dados-acesso dd { margin: 0; overflow-wrap: anywhere; }
+.dados-acesso code { font-size: 15px; user-select: all; }
+.tabela__acoes { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: flex-end; }
+.barra-topo__usuario { display: flex; align-items: center; gap: var(--space-2); }
+.barra-topo__usuario form { margin: 0; }
+@media (max-width: 640px) { .barra-topo__nome { display: none; } }

@@ -6,6 +6,8 @@ from django.db import DatabaseError, connection
 from django.urls import reverse
 from django.utils import formats
 
+from apps.contas.models import Usuario
+from apps.core import views
 from apps.core.selectors import situacao_banco
 
 
@@ -50,13 +52,17 @@ def test_situacao_banco_relata_falha_de_conexao(monkeypatch):
     assert "banco indisponível" in situacao.erro
 
 
-def test_pagina_inicial_mostra_aviso_sem_conexao(client, monkeypatch):
+def test_pagina_inicial_mostra_aviso_sem_conexao(rf, monkeypatch):
+    # Chama a view direto: com o banco fora do ar, o login (sessão no banco)
+    # também falharia antes de chegar à página.
     def falhar():
         raise DatabaseError("banco indisponível")
 
     monkeypatch.setattr(connection, "ensure_connection", falhar)
+    requisicao = rf.get(reverse("core:inicio"))
+    requisicao.user = Usuario(username="admin@exemplo.com", first_name="Admin")
 
-    html = client.get(reverse("core:inicio")).content.decode()
+    html = views.inicio(requisicao).content.decode()
 
     assert "Sem conexão" in html
     assert "Não foi possível conectar ao banco de dados" in html

@@ -179,7 +179,7 @@ def test_tela_de_auditoria(client, cenario):
     ).content.decode()
 
     assert "Campanha de vendas" in conteudo
-    lista = conteudo.split("</form>")[1]
+    lista = conteudo.split('id="conteudo"')[1].split("</form>")[1]
     assert 'selo--neutro">Iniciativa<' in lista
     assert 'selo--neutro">Objetivo<' not in lista  # só registros do tipo filtrado
     assert "autor não verificado" in conteudo

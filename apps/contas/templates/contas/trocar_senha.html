@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block titulo %}Minha senha{% endblock %}
+
+{% block conteudo %}
+  <h1>{% if obrigatoria %}Crie sua senha{% else %}Trocar minha senha{% endif %}</h1>
+  {% if obrigatoria %}
+    <p class="aviso aviso--alerta">Você entrou com uma senha temporária. Para continuar, crie uma senha só sua.</p>
+  {% endif %}
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Salvar senha</button>
+      {% if not obrigatoria %}<a class="botao" href="/">Cancelar</a>{% endif %}
+    </div>
+  </form>
+{% endblock %}

@@ -1,0 +1,3 @@
+# Dependências do servidor (Fly.io). Gunicorn só roda em Linux, por isso não entra em base.txt.
+-r base.txt
+gunicorn==26.2.0

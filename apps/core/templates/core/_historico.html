@@ -8,7 +8,7 @@
           <div class="historico__cabecalho">
             <strong>{{ entrada.acao }}</strong>
             <span class="texto-suave">em {{ entrada.data_hora|date:"d/m/Y H:i" }} por {{ entrada.autor }}</span>
-            {% if not entrada.autor_verificado %}<span class="selo selo--neutro" title="Sem login, a autoria é apenas informada pelo sistema local.">autor não verificado</span>{% endif %}
+            {% if not entrada.autor_verificado %}<span class="selo selo--neutro" title="Registrado sem login (versão local), a autoria não foi comprovada.">autor não verificado</span>{% endif %}
           </div>
           {% if entrada.mudancas %}
             <table class="tabela tabela--compacta">

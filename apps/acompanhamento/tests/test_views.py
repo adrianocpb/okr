@@ -72,7 +72,7 @@ def test_registrar_checkin_pela_tela(client, kr):
     conteudo = html(resposta)
     assert "Check-in registrado." in conteudo
     assert "50% · 125 clientes" in conteudo
-    assert "(informado, não verificado)" in conteudo
+    assert "registrado por Admin Teste" in conteudo
     assert "Tudo certo" in conteudo
 
 

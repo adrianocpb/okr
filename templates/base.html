@@ -43,6 +43,9 @@
       <a class="navegacao__item" href="{% url 'cadastros:ciclo_lista' %}"{% if '/ciclos/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="ciclo" %}<span class="navegacao__rotulo">Ciclos</span></a>
       <p class="navegacao__grupo">Sistema</p>
       <a class="navegacao__item" href="{% url 'auditoria:auditoria_lista' %}"{% if '/auditoria/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="auditoria" %}<span class="navegacao__rotulo">Auditoria</span></a>
+      {% if user.administrador %}
+        <a class="navegacao__item" href="{% url 'contas:usuario_lista' %}"{% if '/usuarios/' in request.path %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="pessoas" %}<span class="navegacao__rotulo">Usuários</span></a>
+      {% endif %}
       {% url 'core:inicio' as url_inicio %}
       <a class="navegacao__item" href="{{ url_inicio }}"{% if request.path == url_inicio %} aria-current="page"{% endif %}>{% include "_icone.html" with nome="sistema" %}<span class="navegacao__rotulo">Situação do sistema</span></a>
     </nav>
@@ -54,7 +57,15 @@
       <button type="button" class="botao-icone barra-topo__menu" data-abrir-menu aria-controls="menu-lateral" aria-expanded="false" aria-label="Abrir menu">{% include "_icone.html" with nome="menu" %}</button>
       <span class="barra-topo__contexto">Gestão OKR</span>
       <div class="barra-topo__acoes">
-        <span class="selo selo--neutro" title="Sem login, acessível apenas neste computador.">Ambiente local</span>
+        {% if user.is_authenticated %}
+          <div class="barra-topo__usuario">
+            <a class="barra-topo__nome" href="{% url 'contas:trocar_senha' %}" title="Trocar minha senha">{{ user.nome_exibicao }}</a>
+            <form method="post" action="{% url 'contas:sair' %}">
+              {% csrf_token %}
+              <button type="submit" class="botao botao--fantasma">Sair</button>
+            </form>
+          </div>
+        {% endif %}
         <button type="button" class="botao-icone" data-alternar-tema aria-label="Alternar tema claro/escuro">
           <span class="tema-icone tema-icone--sol">{% include "_icone.html" with nome="sol" %}</span>
           <span class="tema-icone tema-icone--lua">{% include "_icone.html" with nome="lua" %}</span>
@@ -75,7 +86,7 @@
     </main>
 
     <footer class="rodape">
-      Versão local de desenvolvimento: sem login e acessível apenas neste computador.
+      Gestão OKR · protótipo em validação
       · <a href="{% url 'core:inicio' %}">Situação do sistema</a>
     </footer>
   </div>
