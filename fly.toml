@@ -1,5 +1,5 @@
 # Publicação no Fly.io (ver docs/PUBLICAR-FLY.md).
-app = "gestao-okr"
+app = "rcokr"
 primary_region = "gru"
 
 [build]
@@ -7,7 +7,7 @@ primary_region = "gru"
 
 [env]
   DJANGO_SETTINGS_MODULE = "config.settings.prod"
-  DJANGO_ALLOWED_HOSTS = "gestao-okr.fly.dev"
+  DJANGO_ALLOWED_HOSTS = "rcokr.fly.dev"
   DATABASE_URL = "sqlite:////data/okr.sqlite3"
 
 [[mounts]]
@@ -28,7 +28,7 @@ primary_region = "gru"
     method = "GET"
     path = "/saude/"
     [http_service.checks.headers]
-      Host = "gestao-okr.fly.dev"
+      Host = "rcokr.fly.dev"
       X-Forwarded-Proto = "https"
 
 [[vm]]

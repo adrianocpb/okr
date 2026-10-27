@@ -1,7 +1,7 @@
 # Publicar no Fly.io
 
 O sistema roda em uma máquina pequena em São Paulo (`gru`), com o banco SQLite num
-disco permanente (`/data`). Endereço: <https://gestao-okr.fly.dev>.
+disco permanente (`/data`). Endereço: <https://rcokr.fly.dev>.
 
 - **Acesso:** login por e-mail e senha. Todas as telas exigem login, menos a
   verificação de saúde (`/saude/`). Após 5 tentativas erradas, o e-mail ou o
@@ -18,9 +18,9 @@ disco permanente (`/data`). Endereço: <https://gestao-okr.fly.dev>.
 Na pasta do projeto, no cmd:
 
 ```bat
-fly apps create gestao-okr
-fly volumes create dados_okr --region gru --size 1 --app gestao-okr --yes
-fly secrets set DJANGO_SECRET_KEY=<chave aleatória de 50+ caracteres> --app gestao-okr --stage
+fly apps create rcokr
+fly volumes create dados_okr --region gru --size 1 --app rcokr --yes
+fly secrets set DJANGO_SECRET_KEY=<chave aleatória de 50+ caracteres> --app rcokr --stage
 fly deploy
 ```
 
@@ -29,7 +29,7 @@ Para gerar a chave: `.venv\Scripts\python -c "import secrets; print(secrets.toke
 Depois, crie a conta do primeiro Administrador (a senha temporária aparece no terminal):
 
 ```bat
-fly ssh console --app gestao-okr -C "/app/scripts/gerenciar.sh criar_administrador --email voce@empresa.com --nome 'Seu Nome'"
+fly ssh console --app rcokr -C "/app/scripts/gerenciar.sh criar_administrador --email voce@empresa.com --nome 'Seu Nome'"
 ```
 
 ## Atualizar o sistema publicado
@@ -47,7 +47,7 @@ do disco permanente não são apagados.
 
 | Para | Comando |
 |---|---|
-| Ver se está no ar | `fly status --app gestao-okr` |
-| Ver os registros (logs) | `fly logs --app gestao-okr` |
-| Abrir um terminal no servidor | `fly ssh console --app gestao-okr` |
+| Ver se está no ar | `fly status --app rcokr` |
+| Ver os registros (logs) | `fly logs --app rcokr` |
+| Abrir um terminal no servidor | `fly ssh console --app rcokr` |
 | Ver as cópias do disco | `fly volumes snapshots list <id do volume>` (o id aparece em `fly volumes list`) |
