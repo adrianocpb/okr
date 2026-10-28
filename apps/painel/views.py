@@ -33,6 +33,10 @@ def painel(request):
     periodo_padrao = not ciclo_id and not data_de and not data_ate
     if periodo_padrao:
         data_de = data_ate = hoje
+    elif ciclo_id:
+        # Ciclo e período são alternativos ("Pelo período"): com ciclo escolhido,
+        # as datas não se aplicam e não aparecem nos campos.
+        data_de = data_ate = None
 
     filtro = selectors.Filtros(
         empresa_id=inteiro(valores["empresa"]),
