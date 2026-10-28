@@ -6,7 +6,7 @@
   <div class="cabecalho-pagina">
     <div>
       <h1>Painel de OKRs</h1>
-      {% if periodo_padrao %}<p class="cabecalho-pagina__subtitulo">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Use os filtros de ciclo ou período para ver outros ciclos.</p>{% endif %}
+      {% if periodo_padrao %}<p class="cabecalho-pagina__subtitulo">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Para ver outros ciclos, inclusive futuros, escolha o ciclo ou altere o período.</p>{% endif %}
     </div>
     <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}">{% include "_icone.html" with nome="mais" %}Novo objetivo</a>
   </div>
@@ -24,8 +24,8 @@
         {% for ciclo in ciclos %}<option value="{{ ciclo.pk }}"{% if ciclo.pk == filtro.ciclo_id %} selected{% endif %}>{{ ciclo }}</option>{% endfor %}
       </select>
     </label>
-    <label>Período de <input type="date" name="de" value="{% if not periodo_padrao and filtro.data_de %}{{ filtro.data_de|date:'Y-m-d' }}{% endif %}"></label>
-    <label>até <input type="date" name="ate" value="{% if not periodo_padrao and filtro.data_ate %}{{ filtro.data_ate|date:'Y-m-d' }}{% endif %}"></label>
+    <label>Período de <input type="date" name="de" value="{% if filtro.data_de %}{{ filtro.data_de|date:'Y-m-d' }}{% endif %}"></label>
+    <label>até <input type="date" name="ate" value="{% if filtro.data_ate %}{{ filtro.data_ate|date:'Y-m-d' }}{% endif %}"></label>
     <label>Status do objetivo
       <select name="status">
         <option value=""{% if not filtro.status_objetivo %} selected{% endif %}>Todos</option>

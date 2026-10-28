@@ -236,6 +236,11 @@ def test_filtros_pela_tela(client, alfa, monkeypatch):
 
     assert "Objetivo do T1" not in padrao
     assert "Objetivo do T1" in por_ciclo
+    # O período padrão aparece preenchido; com ciclo escolhido, o período fica vazio.
+    assert 'name="de" value="2026-06-15"' in padrao
+    assert 'name="ate" value="2026-06-15"' in padrao
+    assert 'name="de" value=""' in por_ciclo
+    assert 'name="ate" value=""' in por_ciclo
 
 
 def test_situacao_do_sistema_continua_acessivel(client):
