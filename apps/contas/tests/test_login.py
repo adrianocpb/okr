@@ -65,6 +65,13 @@ def test_entrar_com_email_e_senha(cliente_anonimo):
     assert cliente_anonimo.get("/").status_code == 200
 
 
+def test_tela_de_entrada_tem_fundo_ilustrado(cliente_anonimo):
+    conteudo = cliente_anonimo.get(reverse("contas:entrar")).content.decode()
+
+    assert 'class="entrada__fundo"' in conteudo
+    assert 'aria-hidden="true"' in conteudo  # ilustração decorativa
+
+
 def test_senha_errada_mostra_mensagem(cliente_anonimo):
     services.criar_usuario(nome="Ana", email="ana@exemplo.com")
 
