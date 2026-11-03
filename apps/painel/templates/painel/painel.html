@@ -6,7 +6,7 @@
   <div class="cabecalho-pagina">
     <div>
       <h1>Painel de OKRs</h1>
-      {% if periodo_padrao %}<p class="cabecalho-pagina__subtitulo">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Para ver outros ciclos, inclusive futuros, escolha o ciclo ou altere o período.</p>{% endif %}
+      {% if periodo_padrao %}<p class="cabecalho-pagina__subtitulo">Mostrando ciclos em andamento hoje ({{ hoje|date:"d/m/Y" }}). Para ver outros ciclos, inclusive futuros, escolha no filtro Ciclo.</p>{% endif %}
     </div>
     <a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}">{% include "_icone.html" with nome="mais" %}Novo objetivo</a>
   </div>
@@ -20,12 +20,11 @@
     </label>
     <label>Ciclo
       <select name="ciclo">
-        <option value="">Pelo período</option>
-        {% for ciclo in ciclos %}<option value="{{ ciclo.pk }}"{% if ciclo.pk == filtro.ciclo_id %} selected{% endif %}>{{ ciclo }}</option>{% endfor %}
+        <option value=""{% if periodo_padrao %} selected{% endif %}>Em andamento hoje</option>
+        <option value="todos"{% if todos_os_ciclos %} selected{% endif %}>Todos os ciclos</option>
+        {% include "_opcoes_ciclo.html" %}
       </select>
     </label>
-    <label>Período de <input type="date" name="de" value="{% if filtro.data_de %}{{ filtro.data_de|date:'Y-m-d' }}{% endif %}"></label>
-    <label>até <input type="date" name="ate" value="{% if filtro.data_ate %}{{ filtro.data_ate|date:'Y-m-d' }}{% endif %}"></label>
     <label>Status do objetivo
       <select name="status">
         <option value=""{% if not filtro.status_objetivo %} selected{% endif %}>Todos</option>
@@ -39,7 +38,7 @@
       </select>
     </label>
     <div class="filtros__acoes">
-      <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+      <button type="submit" class="botao botao--primario">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
       {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'painel:painel' %}">Limpar filtros</a>{% endif %}
     </div>
   </form>

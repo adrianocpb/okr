@@ -28,7 +28,7 @@
         {% endfor %}
       </select>
     </label>
-    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    <button type="submit" class="botao botao--primario">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
     {% if busca or empresa_id or situacao != "ativas" %}<a class="botao botao--fantasma" href="{% url 'cadastros:pessoa_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 

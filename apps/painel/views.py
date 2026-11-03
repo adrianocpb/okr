@@ -1,5 +1,3 @@
-from datetime import date
-
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -10,33 +8,24 @@ from apps.okrs.models import Objetivo
 from apps.painel import selectors
 
 LIMITE_ALERTAS = 30
-
-
-def _data(valor: str) -> date | None:
-    try:
-        return date.fromisoformat(valor) if valor else None
-    except ValueError:
-        return None
+TODOS_OS_CICLOS = "todos"
 
 
 def painel(request):
     escopo = escopo_da_requisicao(request)
     hoje = timezone.localdate()
-    valores, filtros_qs = filtros(request, "empresa", "ciclo", "de", "ate", "status", "situacao")
+    valores, filtros_qs = filtros(request, "empresa", "ciclo", "status", "situacao")
 
     # Padrões: objetivos ativos dos ciclos em andamento hoje.
     status = valores["status"] if "status" in request.GET else Objetivo.Status.ATIVO
     if status not in Objetivo.Status.values:
         status = ""
+    # Ciclo: um ciclo escolhido, "todos" (sem recorte de datas) ou, por padrão,
+    # os ciclos em andamento hoje (anual, trimestre e bimestre que incluem hoje).
     ciclo_id = inteiro(valores["ciclo"])
-    data_de, data_ate = _data(valores["de"]), _data(valores["ate"])
-    periodo_padrao = not ciclo_id and not data_de and not data_ate
-    if periodo_padrao:
-        data_de = data_ate = hoje
-    elif ciclo_id:
-        # Ciclo e período são alternativos ("Pelo período"): com ciclo escolhido,
-        # as datas não se aplicam e não aparecem nos campos.
-        data_de = data_ate = None
+    todos_os_ciclos = valores["ciclo"] == TODOS_OS_CICLOS
+    periodo_padrao = not ciclo_id and not todos_os_ciclos
+    data_de = data_ate = hoje if periodo_padrao else None
 
     filtro = selectors.Filtros(
         empresa_id=inteiro(valores["empresa"]),
@@ -61,9 +50,9 @@ def painel(request):
             "periodo_padrao": periodo_padrao,
             "hoje": hoje,
             "empresas": cadastros.listar_empresas(escopo, situacao="todas"),
-            "ciclos": cadastros.listar_ciclos(
-                escopo, empresa_id=filtro.empresa_id, incluir_arquivados=True
-            ),
+            "grupos_ciclo": cadastros.opcoes_de_ciclo(escopo, empresa_id=filtro.empresa_id),
+            "ciclo_id": ciclo_id,
+            "todos_os_ciclos": todos_os_ciclos,
             "status_opcoes": Objetivo.Status.choices,
             "situacoes": selectors.SITUACOES_KR,
             "filtrado": any(valores.values()),

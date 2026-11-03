@@ -117,7 +117,7 @@ def test_vincular_e_desvincular_pela_tela(client, alfa):
     vinculo = VinculoObjetivo.objects.get()
 
     anual_html = html(client.get(reverse("okrs:objetivo_detalhe", args=[anual.pk])))
-    assert "Objetivos trimestrais vinculados" in anual_html
+    assert "Objetivos dos trimestres e bimestres vinculados" in anual_html
     assert "Trimestral" in anual_html
 
     client.post(reverse("okrs:objetivo_desvincular", args=[trimestral.pk, vinculo.pk]))

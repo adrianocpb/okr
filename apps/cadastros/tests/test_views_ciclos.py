@@ -35,7 +35,7 @@ def test_criar_ciclo_anual_pela_tela_com_ano_civil(client, empresa):
     ciclo = Ciclo.objects.get()
     assert (ciclo.data_inicio, ciclo.data_fim) == (date(2026, 1, 1), date(2026, 12, 31))
     assert "Ciclo anual ALF · 2026 cadastrado." in html(resposta)
-    assert "Gerar trimestres que faltam" in html(resposta)
+    assert "Dividir em trimestres" in html(resposta)
 
 
 def test_criar_ciclo_anual_com_datas_do_seletor_do_navegador(client, empresa):
@@ -72,7 +72,7 @@ def test_gerar_trimestres_pela_tela(client, empresa):
     )
 
     assert "Trimestres criados: T1, T2, T3, T4." in html(resposta)
-    assert anual.trimestres.count() == 4
+    assert anual.subciclos.count() == 4
 
 
 def test_gerar_trimestres_exige_post(client, empresa):
@@ -136,18 +136,18 @@ def test_arquivar_ciclo_com_trimestres_mostra_mensagem(client, empresa):
     assert not Ciclo.objects.get(pk=anual.pk).arquivado
 
 
-def test_lista_filtra_por_empresa_e_tipo(client, empresa):
+def test_lista_mostra_anos_com_subciclos_e_filtra_por_empresa(client, empresa):
     outra = fabricas.empresa(nome="Beta", sigla="BET")
     anual = fabricas.ciclo_anual(empresa, 2026)
     fabricas.trimestre(anual, 1)
     fabricas.ciclo_anual(outra, 2026)
 
-    conteudo = html(
-        client.get(reverse("cadastros:ciclo_lista"), {"empresa": empresa.pk, "tipo": "trimestral"})
-    )
+    conteudo = html(client.get(reverse("cadastros:ciclo_lista"), {"empresa": empresa.pk}))
+    lista = conteudo.split('class="lista-ciclos"')[1]
 
-    assert "2026 · T1" in conteudo
-    assert "BET" not in conteudo.split("<tbody>")[1]
+    assert "ALF · 2026" in lista
+    assert "T1 · 0" in lista
+    assert "BET" not in lista
 
 
 def test_detalhe_da_empresa_lista_ciclos(client, empresa):

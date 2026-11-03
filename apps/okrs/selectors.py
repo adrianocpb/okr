@@ -2,7 +2,7 @@
 
 from datetime import date
 
-from django.db.models import F, Q, QuerySet
+from django.db.models import Case, F, IntegerField, Q, QuerySet, Value, When
 from django.utils import timezone
 
 from apps.cadastros.models import Ciclo, Empresa, Pessoa
@@ -38,7 +38,12 @@ def listar_objetivos(
     if busca.strip():
         objetivos = objetivos.filter(chave_titulo__contains=chave_busca(busca))
     return objetivos.order_by(
-        "empresa__sigla", "-ciclo__ano", "ciclo__tipo", "ciclo__trimestre", "chave_titulo", "id"
+        "empresa__sigla",
+        "-ciclo__ano",
+        "ciclo__data_inicio",
+        "ciclo__tipo",
+        "chave_titulo",
+        "id",
     )
 
 
@@ -54,7 +59,14 @@ def ciclos_para_objetivo(empresa: Empresa, atual: Ciclo | None = None) -> QueryS
     filtro = Q(empresa=empresa, arquivado_em__isnull=True)
     if atual is not None:
         filtro |= Q(pk=atual.pk)
-    return Ciclo.objects.filter(filtro).order_by("-ano", "tipo", "trimestre")
+    # Ano mais recente primeiro; dentro dele: ano inteiro, T1–T4, B1–B6.
+    ordem_tipo = Case(
+        When(tipo=Ciclo.Tipo.ANUAL, then=Value(0)),
+        When(tipo=Ciclo.Tipo.TRIMESTRAL, then=Value(1)),
+        default=Value(2),
+        output_field=IntegerField(),
+    )
+    return Ciclo.objects.filter(filtro).order_by("-ano", ordem_tipo, "trimestre", "bimestre")
 
 
 def pessoas_para_responsabilidade(empresa: Empresa, *atuais: Pessoa | None) -> QuerySet:
@@ -72,15 +84,19 @@ def vinculos_do_objetivo(objetivo: Objetivo) -> dict:
     )
     return {
         "anuais": vinculos.filter(objetivo_trimestral=objetivo).order_by("objetivo_anual__titulo"),
+        # "trimestrais": objetivos de qualquer ciclo menor (trimestre ou bimestre).
         "trimestrais": vinculos.filter(objetivo_anual=objetivo).order_by(
-            "objetivo_trimestral__ciclo__trimestre", "objetivo_trimestral__titulo"
+            "objetivo_trimestral__ciclo__data_inicio",
+            "objetivo_trimestral__ciclo__tipo",
+            "objetivo_trimestral__titulo",
         ),
     }
 
 
 def anuais_vinculaveis(objetivo: Objetivo) -> QuerySet:
-    """Objetivos anuais aos quais um objetivo trimestral ainda pode ser vinculado."""
-    if objetivo.ciclo.tipo != Ciclo.Tipo.TRIMESTRAL:
+    """Objetivos anuais aos quais um objetivo de trimestre ou bimestre ainda pode ser
+    vinculado."""
+    if not objetivo.ciclo.eh_subciclo:
         return Objetivo.objects.none()
     return (
         Objetivo.objects.filter(
@@ -223,19 +239,32 @@ def desdobramento_trimestral(objetivo: Objetivo) -> list[dict]:
     for trimestral in trimestrais:
         trimestral.krs_lista = [kr for kr in krs if kr.objetivo_id == trimestral.pk]
 
+    # Uma coluna por trimestre (sempre) e por bimestre (só se o ano tiver bimestres
+    # ou houver objetivo bimestral vinculado).
+    ativos = objetivo.ciclo.subciclos.filter(arquivado_em__isnull=True)
+    tipos = [(Ciclo.Tipo.TRIMESTRAL, Ciclo.TRIMESTRES)]
+    if ativos.filter(tipo=Ciclo.Tipo.BIMESTRAL).exists() or any(
+        o.ciclo.tipo == Ciclo.Tipo.BIMESTRAL for o in trimestrais
+    ):
+        tipos.append((Ciclo.Tipo.BIMESTRAL, Ciclo.BIMESTRES))
     colunas = []
-    ciclos = {c.trimestre: c for c in objetivo.ciclo.trimestres.filter(arquivado_em__isnull=True)}
-    for numero, rotulo in Ciclo.TRIMESTRES:
-        colunas.append(
-            {
-                "rotulo": rotulo,
-                "ciclo": ciclos.get(numero),
-                "objetivos": sorted(
-                    (o for o in trimestrais if o.ciclo.trimestre == numero),
-                    key=lambda o: o.chave_titulo,
-                ),
-            }
-        )
+    for tipo, opcoes in tipos:
+        ciclos = {c.numero: c for c in ativos.filter(tipo=tipo)}
+        for numero, rotulo in opcoes:
+            colunas.append(
+                {
+                    "rotulo": rotulo,
+                    "ciclo": ciclos.get(numero),
+                    "objetivos": sorted(
+                        (
+                            o
+                            for o in trimestrais
+                            if o.ciclo.tipo == tipo and o.ciclo.numero == numero
+                        ),
+                        key=lambda o: o.chave_titulo,
+                    ),
+                }
+            )
     return colunas
 
 
@@ -274,3 +303,37 @@ def detalhar_objetivos(objetivos, hoje: date | None = None) -> None:
     for objetivo in objetivos:
         objetivo.krs_lista = [kr for kr in krs if kr.objetivo_id == objetivo.pk]
         objetivo.iniciativas_lista = [i for i in iniciativas if i.objetivo_id == objetivo.pk]
+
+
+# ------------------------------------------------ telas de ciclo (desdobramento)
+
+
+def marcar_desdobramento(objetivos_anuais) -> None:
+    """Preenche `desdobra_lista` (objetivos dos ciclos menores vinculados) em lote."""
+    objetivos_anuais = list(objetivos_anuais)
+    por_id = {objetivo.pk: objetivo for objetivo in objetivos_anuais}
+    for objetivo in objetivos_anuais:
+        objetivo.mostrar_desdobramento = True
+        objetivo.desdobra_lista = []
+    vinculos = (
+        VinculoObjetivo.objects.filter(objetivo_anual_id__in=list(por_id))
+        .select_related("objetivo_trimestral__ciclo")
+        .order_by("objetivo_trimestral__ciclo__data_inicio", "objetivo_trimestral__ciclo__tipo")
+    )
+    for vinculo in vinculos:
+        por_id[vinculo.objetivo_anual_id].desdobra_lista.append(vinculo.objetivo_trimestral)
+
+
+def marcar_contribuicoes(objetivos) -> None:
+    """Preenche `contribui_lista` (objetivos anuais para os quais contribuem) em lote."""
+    objetivos = list(objetivos)
+    por_id = {objetivo.pk: objetivo for objetivo in objetivos}
+    for objetivo in objetivos:
+        objetivo.contribui_lista = []
+    vinculos = (
+        VinculoObjetivo.objects.filter(objetivo_trimestral_id__in=list(por_id))
+        .select_related("objetivo_anual")
+        .order_by("objetivo_anual__titulo")
+    )
+    for vinculo in vinculos:
+        por_id[vinculo.objetivo_trimestral_id].contribui_lista.append(vinculo.objetivo_anual)

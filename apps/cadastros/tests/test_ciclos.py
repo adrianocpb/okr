@@ -170,14 +170,14 @@ def test_gerar_trimestres_cria_os_que_faltam(empresa):
     criados = services.gerar_trimestres(anual.pk, ator=ATOR, escopo=TODAS)
 
     assert [c.trimestre for c in criados] == [1, 3, 4]
-    assert anual.trimestres.count() == 4
+    assert anual.subciclos.count() == 4
 
 
 def test_gerar_trimestres_com_todos_existentes_informa(empresa):
     anual = fabricas.ciclo_anual(empresa, 2026)
     services.gerar_trimestres(anual.pk, ator=ATOR, escopo=TODAS)
 
-    with pytest.raises(ErroDeNegocio, match="quatro trimestres"):
+    with pytest.raises(ErroDeNegocio, match="todos os trimestres"):
         services.gerar_trimestres(anual.pk, ator=ATOR, escopo=TODAS)
 
 

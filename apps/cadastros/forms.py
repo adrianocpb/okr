@@ -36,6 +36,16 @@ class CicloAnualForm(forms.Form):
         help_text="Deixe as datas em branco para usar o ano civil (01/01 a 31/12).",
     )
     data_fim = CampoData(label="Data de término", required=False)
+    dividir_trimestres = forms.BooleanField(
+        label="Dividir em ciclos trimestrais",
+        required=False,
+        help_text="Cria T1, T2, T3 e T4, de 3 meses cada.",
+    )
+    dividir_bimestres = forms.BooleanField(
+        label="Dividir em ciclos bimestrais",
+        required=False,
+        help_text="Cria B1 a B6, de 2 meses cada.",
+    )
 
     def __init__(self, *args, escopo: EscopoAcesso, **kwargs):
         super().__init__(*args, **kwargs)
@@ -55,14 +65,19 @@ class TrimestreForm(forms.Form):
 class CicloEdicaoForm(forms.Form):
     ano = forms.IntegerField(label="Ano", min_value=2000, max_value=2100)
     trimestre = forms.TypedChoiceField(label="Trimestre", choices=Ciclo.TRIMESTRES, coerce=int)
+    bimestre = forms.TypedChoiceField(label="Bimestre", choices=Ciclo.BIMESTRES, coerce=int)
     data_inicio = CampoData(label="Data de início")
     data_fim = CampoData(label="Data de término")
     versao = CampoVersao(required=False)
 
     def __init__(self, *args, ciclo: Ciclo, **kwargs):
         super().__init__(*args, **kwargs)
-        # Empresa, tipo e ciclo anual não mudam; o trimestre herda o ano do ciclo anual.
-        del self.fields["trimestre" if ciclo.tipo == Ciclo.Tipo.ANUAL else "ano"]
+        # Empresa, tipo e ciclo anual não mudam; trimestre e bimestre herdam o ano do
+        # ciclo anual. Fica só o campo de número do próprio tipo.
+        manter = "ano" if ciclo.tipo == Ciclo.Tipo.ANUAL else Ciclo.SUBCICLOS[ciclo.tipo][0]
+        for campo in ("ano", "trimestre", "bimestre"):
+            if campo != manter:
+                del self.fields[campo]
 
 
 class CampoEmpresas(forms.ModelMultipleChoiceField):

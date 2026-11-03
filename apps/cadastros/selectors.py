@@ -114,6 +114,8 @@ SITUACOES_CICLO = {
     Ciclo.Situacao.EM_ANDAMENTO: Ciclo.Situacao.EM_ANDAMENTO.label,
     Ciclo.Situacao.ENCERRADO: Ciclo.Situacao.ENCERRADO.label,
 }
+# Empresa, ano mais recente primeiro, depois a ordem no calendário (anual antes dos subciclos).
+ORDEM_CICLOS = ("empresa__sigla", "-ano", "data_inicio", "tipo", "id")
 
 
 def _ciclos_visiveis(escopo: EscopoAcesso) -> QuerySet:
@@ -150,7 +152,7 @@ def listar_ciclos(
     if tipo in Ciclo.Tipo.values:
         ciclos = ciclos.filter(tipo=tipo)
     ciclos = _filtrar_situacao_ciclo(ciclos, situacao, hoje or timezone.localdate())
-    return ciclos.order_by("empresa__sigla", "-ano", "tipo", "trimestre", "id")
+    return ciclos.order_by(*ORDEM_CICLOS)
 
 
 def anos_com_ciclos(escopo: EscopoAcesso) -> list[int]:
@@ -168,5 +170,33 @@ def ciclos_da_empresa(escopo: EscopoAcesso, empresa: Empresa) -> QuerySet:
     return listar_ciclos(escopo, empresa_id=empresa.pk)
 
 
+def subciclos_do_ciclo(ciclo: Ciclo, tipo: str = "") -> QuerySet:
+    subciclos = ciclo.subciclos.select_related("empresa")
+    if tipo:
+        subciclos = subciclos.filter(tipo=tipo)
+    return subciclos.order_by("arquivado_em", "data_inicio", "tipo")
+
+
 def trimestres_do_ciclo(ciclo: Ciclo) -> QuerySet:
-    return ciclo.trimestres.select_related("empresa").order_by("arquivado_em", "trimestre")
+    return subciclos_do_ciclo(ciclo, Ciclo.Tipo.TRIMESTRAL)
+
+
+def opcoes_de_ciclo(escopo: EscopoAcesso, *, empresa_id: int | None = None) -> list[dict]:
+    """Ciclos agrupados por ciclo anual, para os filtros (`<optgroup>`).
+
+    Cada grupo é um ciclo anual com o ano inteiro primeiro e depois os trimestres e
+    os bimestres em ordem. Rótulos completos: "RC · 2026", "RC · 2026 · T1".
+    """
+    ciclos = list(listar_ciclos(escopo, empresa_id=empresa_id, incluir_arquivados=True))
+    grupos: dict[int, dict] = {}
+    for ciclo in ciclos:
+        if ciclo.tipo == Ciclo.Tipo.ANUAL:
+            grupos[ciclo.pk] = {"rotulo": str(ciclo), "ciclos": [ciclo]}
+    for ciclo in ciclos:
+        if ciclo.eh_subciclo and ciclo.ciclo_anual_id in grupos:
+            grupos[ciclo.ciclo_anual_id]["ciclos"].append(ciclo)
+    for grupo in grupos.values():
+        anual, *subciclos = grupo["ciclos"]
+        ordem = {Ciclo.Tipo.TRIMESTRAL: 0, Ciclo.Tipo.BIMESTRAL: 1}
+        grupo["ciclos"] = [anual, *sorted(subciclos, key=lambda c: (ordem[c.tipo], c.numero))]
+    return list(grupos.values())

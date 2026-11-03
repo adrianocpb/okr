@@ -1,20 +1,34 @@
 {% extends "base.html" %}
-{% load l10n %}
+{% load l10n static %}
 
 {% block titulo %}Ciclo {{ ciclo }}{% endblock %}
 
 {% block conteudo %}
   <nav class="trilha" aria-label="Trilha">
     <a href="{% url 'cadastros:ciclo_lista' %}">Ciclos</a> ›
-    <a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa.sigla }}</a>
-    {% if ciclo.ciclo_anual %} › <a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual.rotulo }}</a>{% endif %}
+    {% if ciclo.ciclo_anual %}
+      <a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual }}</a> › {{ ciclo.sigla_subciclo }}
+    {% else %}
+      <a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa.sigla }}</a>
+    {% endif %}
   </nav>
 
   <div class="cabecalho-pagina">
-    <h1>Ciclo {{ ciclo.rotulo }} <span class="texto-suave">· {{ ciclo.empresa.sigla }}</span></h1>
+    <div>
+      <div class="ciclo-titulo">
+        <span class="selo selo--neutro">{{ ciclo.empresa.sigla }}</span>
+        <h1>{% if ciclo.eh_subciclo %}{{ ciclo.sigla_subciclo }} {{ ciclo.ano|unlocalize }}{% else %}Ciclo anual {{ ciclo.ano|unlocalize }}{% endif %}</h1>
+        {% include "cadastros/_ciclo_situacao.html" %}
+      </div>
+      <p class="cabecalho-pagina__subtitulo">
+        {% if ciclo.eh_subciclo %}{{ ciclo.get_tipo_display }} de {{ ciclo.periodo }} · parte do <a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">ciclo anual {{ ciclo.ano|unlocalize }}</a>
+        {% else %}{{ ciclo.periodo }}{% if trimestres or bimestres %} · dividido em {% if trimestres %}trimestres{% endif %}{% if trimestres and bimestres %} e {% endif %}{% if bimestres %}bimestres{% endif %}{% endif %}{% endif %}
+      </p>
+    </div>
     <div class="acoes">
       {% if not ciclo.arquivado %}
-        <a class="botao botao--primario" href="{% url 'cadastros:ciclo_editar' ciclo.pk %}">Editar</a>
+        {% if not ciclo.empresa.arquivado %}<a class="botao botao--primario" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">{% include "_icone.html" with nome="mais" %}Novo objetivo {% if ciclo.eh_subciclo %}do {{ ciclo.sigla_subciclo }}{% else %}anual{% endif %}</a>{% endif %}
+        <a class="botao" href="{% url 'cadastros:ciclo_editar' ciclo.pk %}">Editar</a>
         <form method="post" action="{% url 'cadastros:ciclo_arquivar' ciclo.pk %}">
           {% csrf_token %}
           <input type="hidden" name="versao" value="{{ ciclo.versao }}">
@@ -34,76 +48,104 @@
     <p class="aviso aviso--neutro">Ciclo arquivado em {{ ciclo.arquivado_em|date:"d/m/Y H:i" }}. Ele não recebe novos objetivos; os dados e o histórico continuam disponíveis.</p>
   {% endif %}
 
-  <section class="cartao">
-    <h2>Dados</h2>
-    <dl class="situacao">
-      <dt>Empresa</dt><dd><a href="{% url 'cadastros:empresa_detalhe' ciclo.empresa.pk %}">{{ ciclo.empresa }}</a></dd>
-      <dt>Tipo</dt><dd>{{ ciclo.get_tipo_display }}</dd>
-      <dt>Ano</dt><dd>{{ ciclo.ano|unlocalize }}</dd>
-      {% if ciclo.trimestre %}<dt>Trimestre</dt><dd>{{ ciclo.get_trimestre_display }}</dd>{% endif %}
-      {% if ciclo.ciclo_anual %}<dt>Ciclo anual</dt><dd><a href="{% url 'cadastros:ciclo_detalhe' ciclo.ciclo_anual.pk %}">{{ ciclo.ciclo_anual.rotulo }} ({{ ciclo.ciclo_anual.periodo }})</a></dd>{% endif %}
-      <dt>Período</dt><dd>{{ ciclo.periodo }}</dd>
-      <dt>Situação</dt><dd>{% include "cadastros/_ciclo_situacao.html" %}</dd>
-    </dl>
-  </section>
-
-  <section class="cartao" aria-labelledby="titulo-objetivos">
-    <div class="cabecalho-secao">
-      <h2 id="titulo-objetivos">Objetivos do ciclo</h2>
-      {% if not ciclo.arquivado and not ciclo.empresa.arquivado %}<a class="botao" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">{% include "_icone.html" with nome="mais" %}Novo objetivo neste ciclo</a>{% endif %}
-    </div>
-    {% if objetivos %}
-      <ul class="lista-simples">
-        {% for objetivo in objetivos %}
-          <li><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo }}</a> <span class="texto-suave">· Owner: {{ objetivo.owner.nome }}</span> {% include "okrs/_status.html" %}</li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="texto-suave">Nenhum objetivo neste ciclo.</p>
-    {% endif %}
-  </section>
-
-  {% if ciclo.tipo == "anual" %}
-    <section class="cartao" aria-labelledby="titulo-trimestres">
+  {% if ciclo.eh_subciclo %}
+    <nav class="passos-ciclo" aria-label="Outros {{ ciclo.get_tipo_display|lower }}s do ano">
+      {% if anterior %}<a class="passo" href="{% url 'cadastros:ciclo_detalhe' anterior.pk %}" aria-label="Anterior: {{ anterior.sigla_subciclo }}">‹</a>{% endif %}
+      {% for irmao in irmaos %}
+        <a class="passo{% if irmao.pk == ciclo.pk %} passo--atual{% endif %}" href="{% url 'cadastros:ciclo_detalhe' irmao.pk %}"{% if irmao.pk == ciclo.pk %} aria-current="page"{% endif %}>{{ irmao.sigla_subciclo }}</a>
+      {% endfor %}
+      {% if proximo %}<a class="passo" href="{% url 'cadastros:ciclo_detalhe' proximo.pk %}" aria-label="Próximo: {{ proximo.sigla_subciclo }}">›</a>{% endif %}
+      {% if mesmo_periodo %}
+        <span class="texto-suave passos-ciclo__extra">{% if ciclo.tipo == "trimestral" %}Bimestres{% else %}Trimestres{% endif %} deste período:
+          {% for outro in mesmo_periodo %}<a href="{% url 'cadastros:ciclo_detalhe' outro.pk %}">{{ outro.sigla_subciclo }}</a>{% if not forloop.last %} · {% endif %}{% endfor %}
+        </span>
+      {% endif %}
+    </nav>
+  {% else %}
+    <section class="cartao" aria-labelledby="titulo-subciclos">
       <div class="cabecalho-secao">
-        <h2 id="titulo-trimestres">Trimestres</h2>
-        {% if not ciclo.arquivado and faltam_trimestres %}
+        <h2 id="titulo-subciclos">Ciclos menores</h2>
+        {% if not ciclo.arquivado %}
           <div class="acoes">
-            {% if pode_gerar %}
-              <form method="post" action="{% url 'cadastros:ciclo_gerar_trimestres' ciclo.pk %}">
+            {% if aba == "tri" and faltam_trimestres %}
+              {% if pode_gerar %}
+                <form method="post" action="{% url 'cadastros:ciclo_gerar_trimestres' ciclo.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="botao botao--pequeno">{% if trimestres %}Gerar trimestres que faltam{% else %}Dividir em trimestres{% endif %}</button>
+                </form>
+              {% endif %}
+              <a class="botao botao--pequeno" href="{% url 'cadastros:ciclo_trimestre_novo' ciclo.pk %}">{% include "_icone.html" with nome="mais" %}Novo trimestre</a>
+            {% elif aba == "bi" and faltam_bimestres and pode_gerar_bimestres %}
+              <form method="post" action="{% url 'cadastros:ciclo_gerar_bimestres' ciclo.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="botao botao--primario">Gerar trimestres que faltam</button>
+                <button type="submit" class="botao botao--pequeno">{% if bimestres %}Gerar bimestres que faltam{% else %}Dividir em bimestres{% endif %}</button>
               </form>
             {% endif %}
-            <a class="botao" href="{% url 'cadastros:ciclo_trimestre_novo' ciclo.pk %}">{% include "_icone.html" with nome="mais" %}Novo trimestre</a>
           </div>
         {% endif %}
       </div>
-      {% if trimestres %}
-        <table class="tabela tabela--compacta">
-          <thead><tr><th scope="col">Trimestre</th><th scope="col">Período</th><th scope="col">Situação</th></tr></thead>
-          <tbody>
-            {% for trimestre in trimestres %}
-              {% with ciclo=trimestre %}
-                <tr>
-                  <td><a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">{{ ciclo.get_trimestre_display }}</a></td>
-                  <td>{{ ciclo.periodo }}</td>
-                  <td>{% include "cadastros/_ciclo_situacao.html" %}</td>
-                </tr>
-              {% endwith %}
-            {% endfor %}
-          </tbody>
-        </table>
+      <nav class="abas" aria-label="Tipo de ciclo menor">
+        <a href="?sub=tri"{% if aba == "tri" %} aria-current="page"{% endif %}>Trimestres ({{ trimestres|length }})</a>
+        <a href="?sub=bi"{% if aba == "bi" %} aria-current="page"{% endif %}>Bimestres ({{ bimestres|length }})</a>
+      </nav>
+      {% if subciclos_aba %}
+        <div class="subciclos">
+          {% for subciclo in subciclos_aba %}
+            {% with ciclo=subciclo %}
+              <a class="subciclo{% if ciclo.situacao == 'em_andamento' and not ciclo.arquivado %} subciclo--atual{% endif %}" href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}">
+                <span class="subciclo__topo"><strong>{{ ciclo.sigla_subciclo }}</strong>{% include "cadastros/_ciclo_situacao.html" %}</span>
+                <span class="texto-suave">{{ ciclo.data_inicio|date:"d/m" }} a {{ ciclo.data_fim|date:"d/m" }}</span>
+                <span>{{ ciclo.total_objetivos }} objetivo{{ ciclo.total_objetivos|pluralize }}</span>
+              </a>
+            {% endwith %}
+          {% endfor %}
+        </div>
       {% else %}
-        <p class="texto-suave">Nenhum trimestre cadastrado.
-          {% if pode_gerar %}Use "Gerar trimestres que faltam" para criar os quatro trimestres de uma vez.{% endif %}
+        <p class="texto-suave">
+          {% if aba == "tri" %}Este ciclo ainda não foi dividido em trimestres.{% else %}Este ciclo ainda não foi dividido em bimestres.{% endif %}
+          {% if not ciclo.arquivado %}
+            {% if aba == "tri" and pode_gerar or aba == "bi" and pode_gerar_bimestres %}Use o botão "Dividir" acima.
+            {% else %}Como este ciclo não começa no dia 1 ou não dura exatamente 12 meses, a divisão automática não está disponível.{% endif %}
+          {% endif %}
         </p>
-      {% endif %}
-      {% if not ciclo.arquivado and faltam_trimestres and not pode_gerar %}
-        <p class="texto-suave">Como este ciclo não começa no dia 1 ou não dura exatamente 12 meses, os trimestres precisam ser cadastrados individualmente, com as datas informadas.</p>
       {% endif %}
     </section>
   {% endif %}
 
+  <section aria-labelledby="titulo-objetivos" class="secao-objetivos">
+    <div class="cabecalho-secao">
+      <h2 id="titulo-objetivos">{% if ciclo.eh_subciclo %}Objetivos do {{ ciclo.sigla_subciclo }}{% else %}Objetivos anuais{% endif %} ({{ objetivos|length }})</h2>
+      {% if objetivos %}
+        <div class="acoes" data-controles-expansao hidden>
+          <button type="button" class="botao botao--pequeno" data-expandir-todos>Expandir todos</button>
+          <button type="button" class="botao botao--pequeno" data-recolher-todos>Recolher todos</button>
+        </div>
+      {% endif %}
+    </div>
+    {% if objetivos %}
+      <div class="lista-objetivos">
+        {% for objetivo in objetivos %}{% include "okrs/_objetivo_linha.html" %}{% endfor %}
+      </div>
+    {% else %}
+      <p class="vazio">Nenhum objetivo neste ciclo.</p>
+    {% endif %}
+  </section>
+
+  {% if ciclo.eh_subciclo and sem_desdobramento %}
+    <section class="cartao" aria-labelledby="titulo-sem-desdobramento">
+      <h2 id="titulo-sem-desdobramento">Objetivos anuais sem desdobramento no {{ ciclo.sigla_subciclo }}</h2>
+      <p class="texto-suave">Ajuda a perceber o que ficou sem plano neste período. Não é obrigatório desdobrar todos.</p>
+      <ul class="lista-simples">
+        {% for anual in sem_desdobramento %}
+          <li class="lista-simples__com-acao">
+            <a href="{% url 'okrs:objetivo_detalhe' anual.pk %}">{{ anual.titulo }}</a>
+            {% if not ciclo.arquivado %}<a class="botao botao--pequeno" href="{% url 'okrs:objetivo_novo' %}?empresa={{ ciclo.empresa.pk }}&amp;ciclo={{ ciclo.pk }}">Criar objetivo do {{ ciclo.sigla_subciclo }}</a>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+
   {% include "core/_historico.html" %}
+  <script src="{% static 'js/objetivos_lista.js' %}" defer></script>
 {% endblock %}

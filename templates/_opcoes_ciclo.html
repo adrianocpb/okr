@@ -1,0 +1,6 @@
+{# Opções de ciclo agrupadas por ciclo anual (<optgroup>). Espera grupos_ciclo e ciclo_id. #}
+{% for grupo in grupos_ciclo %}
+  <optgroup label="{{ grupo.rotulo }}">
+    {% for ciclo in grupo.ciclos %}<option value="{{ ciclo.pk }}"{% if ciclo.pk == ciclo_id %} selected{% endif %}>{{ ciclo }}{% if ciclo.tipo == "anual" %} (ano inteiro){% endif %}{% if ciclo.arquivado %} — arquivado{% endif %}</option>{% endfor %}
+  </optgroup>
+{% endfor %}

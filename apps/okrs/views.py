@@ -51,9 +51,7 @@ def objetivo_lista(request):
             "empresa_id": empresa_id,
             "ciclo_id": _inteiro(filtros["ciclo"]),
             "empresas": cadastros.listar_empresas(escopo, situacao="todas"),
-            "ciclos": cadastros.listar_ciclos(
-                escopo, empresa_id=empresa_id, incluir_arquivados=True
-            ),
+            "grupos_ciclo": cadastros.opcoes_de_ciclo(escopo, empresa_id=empresa_id),
             "status_opcoes": selectors.STATUS_FILTRO,
             "filtros_qs": filtros_qs,
         },

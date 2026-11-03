@@ -236,11 +236,21 @@ def test_filtros_pela_tela(client, alfa, monkeypatch):
 
     assert "Objetivo do T1" not in padrao
     assert "Objetivo do T1" in por_ciclo
-    # O período padrão aparece preenchido; com ciclo escolhido, o período fica vazio.
-    assert 'name="de" value="2026-06-15"' in padrao
-    assert 'name="ate" value="2026-06-15"' in padrao
-    assert 'name="de" value=""' in por_ciclo
-    assert 'name="ate" value=""' in por_ciclo
+    # Sem filtro de período: o padrão é "Em andamento hoje", visível no filtro Ciclo.
+    assert 'name="de"' not in padrao
+    assert '<option value="" selected>Em andamento hoje</option>' in padrao
+    assert '<option value="" selected>Em andamento hoje</option>' not in por_ciclo
+    assert "ALF · 2026 · T1" in por_ciclo
+
+
+def test_todos_os_ciclos_mostra_objetivos_fora_do_periodo_atual(client, alfa, monkeypatch):
+    monkeypatch.setattr(timezone, "localdate", lambda *a, **k: HOJE)
+    alfa.objetivo(titulo="Objetivo do T1", ciclo=alfa.t1)
+
+    conteudo = client.get("/", {"ciclo": "todos"}).content.decode()
+
+    assert "Objetivo do T1" in conteudo
+    assert '<option value="todos" selected>Todos os ciclos</option>' in conteudo
 
 
 def test_situacao_do_sistema_continua_acessivel(client):

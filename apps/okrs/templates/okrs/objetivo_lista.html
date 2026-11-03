@@ -22,7 +22,7 @@
     <label>Ciclo
       <select name="ciclo">
         <option value="">Todos</option>
-        {% for ciclo in ciclos %}<option value="{{ ciclo.pk }}"{% if ciclo.pk == ciclo_id %} selected{% endif %}>{{ ciclo }}</option>{% endfor %}
+        {% include "_opcoes_ciclo.html" %}
       </select>
     </label>
     <label>Status
@@ -30,7 +30,7 @@
         {% for valor, rotulo in status_opcoes.items %}<option value="{{ valor }}"{% if valor == filtros.status %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
       </select>
     </label>
-    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    <button type="submit" class="botao botao--primario">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
     {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'okrs:objetivo_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
@@ -41,69 +41,7 @@
     </div>
     <div class="lista-objetivos">
       {% for objetivo in pagina.object_list %}
-        <details class="objetivo-linha" data-objetivo="{{ objetivo.pk }}">
-          <summary class="objetivo-linha__resumo">
-            <span class="objetivo-linha__titulo">{{ objetivo.titulo }}</span>
-            <span class="objetivo-linha__meta">
-              <span class="selo selo--neutro">{{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}</span>
-              <span class="texto-suave">Owner: {{ objetivo.owner.nome }} · Sponsor: {{ objetivo.sponsor.nome }}</span>
-              <span class="texto-suave">{{ objetivo.krs_lista|length }} KR{{ objetivo.krs_lista|length|pluralize }} · {{ objetivo.iniciativas_lista|length }} iniciativa{{ objetivo.iniciativas_lista|length|pluralize }}</span>
-              {% include "okrs/_status.html" %}
-            </span>
-          </summary>
-
-          <div class="objetivo-linha__conteudo">
-            <p><a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">Abrir o objetivo</a></p>
-
-            <h3 class="objetivo-linha__secao">Resultados-chave</h3>
-            {% if objetivo.krs_lista %}
-              <table class="tabela tabela--compacta">
-                <thead><tr><th scope="col">KR</th><th scope="col">Último check-in</th><th scope="col">Resultado</th><th scope="col">Evolução</th></tr></thead>
-                <tbody>
-                  {% for kr in objetivo.krs_lista %}
-                    <tr>
-                      <td>
-                        <a href="{% url 'okrs:kr_detalhe' kr.pk %}"><strong>{{ kr.titulo }}</strong></a>
-                        <div class="texto-suave">{{ kr.responsavel.nome }}{% if kr.status != "ativo" %} · {{ kr.get_status_display }}{% endif %}</div>
-                      </td>
-                      <td>
-                        {% if kr.situacao.data_ultimo_checkin %}
-                          {{ kr.situacao.data_ultimo_checkin|date:"d/m/Y" }}
-                          <div>{% include "acompanhamento/_status_checkin.html" with status=kr.situacao.status rotulo=kr.situacao.status_rotulo %}</div>
-                        {% else %}<span class="texto-suave">Nenhum</span>{% endif %}
-                        {% if kr.situacao.atrasado %}<div><span class="selo selo--alerta">Atrasado</span></div>{% endif %}
-                      </td>
-                      <td>{% include "okrs/_progresso.html" with situacao=kr.situacao %}</td>
-                      <td>{% if kr.mini_grafico %}{% include "acompanhamento/_mini_grafico.html" %}{% else %}<span class="texto-suave">Sem check-ins</span>{% endif %}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            {% else %}
-              <p class="texto-suave">Nenhum KR cadastrado.</p>
-            {% endif %}
-
-            <h3 class="objetivo-linha__secao">Iniciativas</h3>
-            {% if objetivo.iniciativas_lista %}
-              <table class="tabela tabela--compacta">
-                <thead><tr><th scope="col">Iniciativa</th><th scope="col">Responsável</th><th scope="col">Prazo</th><th scope="col">KRs</th><th scope="col">Status</th></tr></thead>
-                <tbody>
-                  {% for iniciativa in objetivo.iniciativas_lista %}
-                    <tr>
-                      <td><a href="{% url 'okrs:iniciativa_detalhe' iniciativa.pk %}">{{ iniciativa.titulo }}</a></td>
-                      <td>{{ iniciativa.responsavel.nome }}</td>
-                      <td>{{ iniciativa.prazo|date:"d/m/Y"|default:"—" }}</td>
-                      <td>{% for kr in iniciativa.krs.all %}{{ kr.titulo }}{% if not forloop.last %}; {% endif %}{% empty %}<span class="texto-suave">Objetivo</span>{% endfor %}</td>
-                      <td>{% include "okrs/_iniciativa_status.html" %}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            {% else %}
-              <p class="texto-suave">Nenhuma iniciativa cadastrada.</p>
-            {% endif %}
-          </div>
-        </details>
+        {% include "okrs/_objetivo_linha.html" %}
       {% endfor %}
     </div>
     {% include "core/_paginacao.html" %}

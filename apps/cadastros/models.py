@@ -112,14 +112,16 @@ class VinculoPessoaEmpresa(models.Model):
 class Ciclo(ModeloArquivavel):
     """Ciclo de OKRs de uma empresa (Q-03: cada empresa tem os seus).
 
-    Ciclos trimestrais pertencem a um ciclo anual da mesma empresa e ficam dentro
-    do período dele. A situação (planejado, em andamento, encerrado) é calculada
-    pelas datas.
+    Ciclos trimestrais e bimestrais (subciclos) pertencem a um ciclo anual da
+    mesma empresa e ficam dentro do período dele. Um ano pode ter trimestres,
+    bimestres ou os dois. A situação (planejado, em andamento, encerrado) é
+    calculada pelas datas.
     """
 
     class Tipo(models.TextChoices):
         ANUAL = "anual", "Anual"
         TRIMESTRAL = "trimestral", "Trimestral"
+        BIMESTRAL = "bimestral", "Bimestral"
 
     class Situacao(models.TextChoices):
         PLANEJADO = "planejado", "Planejado"
@@ -132,6 +134,12 @@ class Ciclo(ModeloArquivavel):
         (3, "3º trimestre"),
         (4, "4º trimestre"),
     ]
+    BIMESTRES = [(numero, f"{numero}º bimestre") for numero in range(1, 7)]
+    # tipo do subciclo: (campo do número, meses de cada um, quantidade, letra do rótulo)
+    SUBCICLOS = {
+        "trimestral": ("trimestre", 3, 4, "T"),
+        "bimestral": ("bimestre", 2, 6, "B"),
+    }
 
     empresa = models.ForeignKey(
         Empresa, on_delete=models.PROTECT, related_name="ciclos", verbose_name="empresa"
@@ -145,12 +153,15 @@ class Ciclo(ModeloArquivavel):
     trimestre = models.PositiveSmallIntegerField(
         "trimestre", null=True, blank=True, choices=TRIMESTRES
     )
+    bimestre = models.PositiveSmallIntegerField(
+        "bimestre", null=True, blank=True, choices=BIMESTRES
+    )
     ciclo_anual = models.ForeignKey(
         "self",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="trimestres",
+        related_name="subciclos",
         verbose_name="ciclo anual",
     )
     data_inicio = models.DateField("data de início")
@@ -159,7 +170,7 @@ class Ciclo(ModeloArquivavel):
     class Meta:
         verbose_name = "ciclo"
         verbose_name_plural = "ciclos"
-        ordering = ["empresa__sigla", "-ano", "tipo", "trimestre"]
+        ordering = ["empresa__sigla", "-ano", "data_inicio", "tipo"]
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(data_fim__gt=models.F("data_inicio")),
@@ -167,11 +178,24 @@ class Ciclo(ModeloArquivavel):
             ),
             models.CheckConstraint(
                 condition=(
-                    models.Q(tipo="anual", trimestre__isnull=True, ciclo_anual__isnull=True)
+                    models.Q(
+                        tipo="anual",
+                        trimestre__isnull=True,
+                        bimestre__isnull=True,
+                        ciclo_anual__isnull=True,
+                    )
                     | models.Q(
                         tipo="trimestral",
                         trimestre__gte=1,
                         trimestre__lte=4,
+                        bimestre__isnull=True,
+                        ciclo_anual__isnull=False,
+                    )
+                    | models.Q(
+                        tipo="bimestral",
+                        bimestre__gte=1,
+                        bimestre__lte=6,
+                        trimestre__isnull=True,
                         ciclo_anual__isnull=False,
                     )
                 ),
@@ -187,15 +211,38 @@ class Ciclo(ModeloArquivavel):
                 condition=models.Q(arquivado_em__isnull=True),
                 name="ciclo_trimestre_unico",
             ),
+            models.UniqueConstraint(
+                fields=["ciclo_anual", "bimestre"],
+                condition=models.Q(arquivado_em__isnull=True),
+                name="ciclo_bimestre_unico",
+            ),
         ]
 
     def __str__(self):
         return f"{self.empresa.sigla} · {self.rotulo}"
 
     @property
+    def eh_subciclo(self) -> bool:
+        return self.tipo in self.SUBCICLOS
+
+    @property
+    def numero(self) -> int | None:
+        """Número do trimestre (1–4) ou do bimestre (1–6); None no ciclo anual."""
+        if not self.eh_subciclo:
+            return None
+        return getattr(self, self.SUBCICLOS[self.tipo][0])
+
+    @property
+    def sigla_subciclo(self) -> str:
+        """ "T4", "B6"; vazio no ciclo anual."""
+        if not self.eh_subciclo:
+            return ""
+        return f"{self.SUBCICLOS[self.tipo][3]}{self.numero}"
+
+    @property
     def rotulo(self) -> str:
-        if self.tipo == self.Tipo.TRIMESTRAL:
-            return f"{self.ano} · T{self.trimestre}"
+        if self.eh_subciclo:
+            return f"{self.ano} · {self.sigla_subciclo}"
         return str(self.ano)
 
     @property
@@ -224,10 +271,11 @@ class Ciclo(ModeloArquivavel):
 
         if self.tipo == self.Tipo.ANUAL:
             self.trimestre = None
+            self.bimestre = None
             self.ciclo_anual = None
             self._validar_anual(erros)
-        elif self.tipo == self.Tipo.TRIMESTRAL:
-            self._validar_trimestral(erros)
+        elif self.eh_subciclo:
+            self._validar_subciclo(erros)
 
         if not erros and not self.arquivado:
             conflito = self.conflito_de_periodo()
@@ -251,50 +299,59 @@ class Ciclo(ModeloArquivavel):
             erros["ano"] = f"Esta empresa já tem um ciclo anual de {self.ano}."
         if self.pk is None:
             return
-        trimestres = self.trimestres.filter(arquivado_em__isnull=True)
+        subciclos = self.subciclos.filter(arquivado_em__isnull=True)
         ano_anterior = Ciclo.objects.filter(pk=self.pk).values_list("ano", flat=True).first()
-        if ano_anterior is not None and ano_anterior != self.ano and trimestres.exists():
-            erros["ano"] = "Não é possível alterar o ano de um ciclo que já possui trimestres."
+        if ano_anterior is not None and ano_anterior != self.ano and subciclos.exists():
+            erros["ano"] = (
+                "Não é possível alterar o ano de um ciclo que já possui trimestres ou bimestres."
+            )
         if (
             self.data_inicio
             and self.data_fim
-            and trimestres.filter(
+            and subciclos.filter(
                 models.Q(data_inicio__lt=self.data_inicio) | models.Q(data_fim__gt=self.data_fim)
             ).exists()
         ):
             erros["data_inicio"] = (
-                "O período deve continuar abrangendo todos os trimestres do ciclo."
+                "O período deve continuar abrangendo todos os trimestres e bimestres do ciclo."
             )
 
-    def _validar_trimestral(self, erros: dict) -> None:
+    def _validar_subciclo(self, erros: dict) -> None:
+        campo, _meses, quantidade, _letra = self.SUBCICLOS[self.tipo]
+        # Só o número do próprio tipo é guardado (trimestre ou bimestre).
+        if campo == "trimestre":
+            self.bimestre = None
+        else:
+            self.trimestre = None
         anual = self.ciclo_anual
         if anual is None:
-            erros["ciclo_anual"] = "Informe o ciclo anual ao qual o trimestre pertence."
+            erros["ciclo_anual"] = f"Informe o ciclo anual ao qual o {campo} pertence."
             return
         if anual.tipo != self.Tipo.ANUAL:
-            erros["ciclo_anual"] = "O trimestre deve pertencer a um ciclo anual."
+            erros["ciclo_anual"] = f"O {campo} deve pertencer a um ciclo anual."
             return
-        # Empresa e ano vêm sempre do ciclo anual: um trimestre nunca fica em outra empresa.
+        # Empresa e ano vêm sempre do ciclo anual: um subciclo nunca fica em outra empresa.
         self.empresa_id = anual.empresa_id
         self.ano = anual.ano
-        if self.trimestre not in (1, 2, 3, 4):
-            erros["trimestre"] = "Escolha um trimestre de 1 a 4."
+        numero = getattr(self, campo)
+        if numero not in range(1, quantidade + 1):
+            erros[campo] = f"Escolha um {campo} de 1 a {quantidade}."
         elif (
             not self.arquivado
             and Ciclo.objects.filter(
-                ciclo_anual=anual, trimestre=self.trimestre, arquivado_em__isnull=True
+                ciclo_anual=anual, tipo=self.tipo, arquivado_em__isnull=True, **{campo: numero}
             )
             .exclude(pk=self.pk)
             .exists()
         ):
-            erros["trimestre"] = f"O ciclo anual {anual.ano} já tem o {self.trimestre}º trimestre."
+            erros[campo] = f"O ciclo anual {anual.ano} já tem o {numero}º {campo}."
         if (
             self.data_inicio
             and self.data_fim
             and (self.data_inicio < anual.data_inicio or self.data_fim > anual.data_fim)
         ):
             erros["data_inicio"] = (
-                f"O trimestre deve estar dentro do período do ciclo anual ({anual.periodo})."
+                f"O {campo} deve estar dentro do período do ciclo anual ({anual.periodo})."
             )
 
     def conflito_de_periodo(self):

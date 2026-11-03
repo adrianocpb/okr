@@ -180,33 +180,44 @@ def reativar_pessoa(pessoa_id: int, *, versao: int, ator: Ator, escopo: EscopoAc
 # ------------------------------------------------------------------ ciclos
 
 MENSAGEM_CICLO_DUPLICADO = "Já existe um ciclo ativo igual para esta empresa."
+NOMES_SUBCICLO = {Ciclo.Tipo.TRIMESTRAL: "trimestre", Ciclo.Tipo.BIMESTRAL: "bimestre"}
 
 
-def periodo_padrao_do_trimestre(anual: Ciclo, trimestre: int) -> tuple[date, date] | None:
-    """Datas sugeridas para o trimestre: blocos de 3 meses a partir do início do ano.
-
-    Só há sugestão quando o ciclo anual começa no dia 1 e dura exatamente 12 meses.
+def periodo_padrao_do_subciclo(anual: Ciclo, tipo: str, numero: int) -> tuple[date, date] | None:
+    """Datas sugeridas: blocos de 3 meses (trimestre) ou 2 meses (bimestre) a partir do
+    início do ano. Só há sugestão quando o ciclo anual começa no dia 1 e dura 12 meses.
     """
     if not anual_regular(anual):
         return None
-    inicio = somar_meses(anual.data_inicio, 3 * (trimestre - 1))
-    return inicio, fim_do_periodo(inicio, 3)
+    meses = Ciclo.SUBCICLOS[tipo][1]
+    inicio = somar_meses(anual.data_inicio, meses * (numero - 1))
+    return inicio, fim_do_periodo(inicio, meses)
+
+
+def periodo_padrao_do_trimestre(anual: Ciclo, trimestre: int) -> tuple[date, date] | None:
+    return periodo_padrao_do_subciclo(anual, Ciclo.Tipo.TRIMESTRAL, trimestre)
 
 
 def anual_regular(anual: Ciclo) -> bool:
     return anual.data_inicio.day == 1 and anual.data_fim == fim_do_periodo(anual.data_inicio, 12)
 
 
+@transaction.atomic
 def criar_ciclo_anual(
     *,
     empresa_id: int,
     ano: int,
     data_inicio: date | None = None,
     data_fim: date | None = None,
+    dividir_trimestres: bool = False,
+    dividir_bimestres: bool = False,
     ator: Ator,
     escopo: EscopoAcesso,
 ) -> Ciclo:
-    """Cria um ciclo anual. Sem datas, assume o ano civil (01/01 a 31/12)."""
+    """Cria um ciclo anual. Sem datas, assume o ano civil (01/01 a 31/12).
+
+    Opcionalmente já cria os trimestres e/ou os bimestres, na mesma transação.
+    """
     empresa = selectors.obter_empresa(escopo, empresa_id)
     if empresa.arquivado:
         raise ErroDeNegocio("Empresa arquivada não pode receber novos ciclos.")
@@ -223,24 +234,39 @@ def criar_ciclo_anual(
         data_inicio=data_inicio,
         data_fim=data_fim,
     )
-    return _gravar_protegido(lambda: services.criar(ciclo, ator=ator), MENSAGEM_CICLO_DUPLICADO)
+    anual = _gravar_protegido(lambda: services.criar(ciclo, ator=ator), MENSAGEM_CICLO_DUPLICADO)
+    divisoes = [Ciclo.Tipo.TRIMESTRAL] * dividir_trimestres + [
+        Ciclo.Tipo.BIMESTRAL
+    ] * dividir_bimestres
+    if divisoes and not anual_regular(anual):
+        raise ValidationError(
+            {
+                "data_inicio": "Para dividir automaticamente, o ciclo anual precisa começar no "
+                "dia 1 e durar 12 meses. Crie sem dividir e cadastre os ciclos menores com datas."
+            }
+        )
+    for tipo in divisoes:
+        gerar_subciclos(anual.pk, tipo=tipo, ator=ator, escopo=escopo)
+    return anual
 
 
-def criar_trimestre(
+def criar_subciclo(
     *,
     ciclo_anual_id: int,
-    trimestre: int,
+    tipo: str,
+    numero: int,
     data_inicio: date | None = None,
     data_fim: date | None = None,
     ator: Ator,
     escopo: EscopoAcesso,
 ) -> Ciclo:
-    """Cria um trimestre no ciclo anual. Sem datas, usa o período padrão do trimestre."""
+    """Cria um trimestre ou bimestre no ciclo anual. Sem datas, usa o período padrão."""
+    nome = NOMES_SUBCICLO[tipo]
     anual = selectors.obter_ciclo(escopo, ciclo_anual_id)
     if anual.tipo != Ciclo.Tipo.ANUAL:
-        raise ErroDeNegocio("Trimestres só podem ser criados em ciclos anuais.")
+        raise ErroDeNegocio(f"{nome.capitalize()}s só podem ser criados em ciclos anuais.")
     if anual.arquivado:
-        raise ErroDeNegocio("Ciclo anual arquivado não pode receber novos trimestres.")
+        raise ErroDeNegocio(f"Ciclo anual arquivado não pode receber novos {nome}s.")
     if (data_inicio is None) != (data_fim is None):
         raise ValidationError(
             {
@@ -249,48 +275,62 @@ def criar_trimestre(
             }
         )
     if data_inicio is None:
-        padrao = periodo_padrao_do_trimestre(anual, trimestre)
+        padrao = periodo_padrao_do_subciclo(anual, tipo, numero)
         if padrao is None:
             raise ValidationError(
                 {
                     "data_inicio": "Este ciclo anual não começa no dia 1 ou não dura 12 meses; "
-                    "informe as datas do trimestre."
+                    f"informe as datas do {nome}."
                 }
             )
         data_inicio, data_fim = padrao
     ciclo = Ciclo(
         empresa_id=anual.empresa_id,
-        tipo=Ciclo.Tipo.TRIMESTRAL,
+        tipo=tipo,
         ano=anual.ano,
-        trimestre=trimestre,
         ciclo_anual=anual,
         data_inicio=data_inicio,
         data_fim=data_fim,
+        **{Ciclo.SUBCICLOS[tipo][0]: numero},
     )
     return _gravar_protegido(lambda: services.criar(ciclo, ator=ator), MENSAGEM_CICLO_DUPLICADO)
 
 
-def gerar_trimestres(ciclo_anual_id: int, *, ator: Ator, escopo: EscopoAcesso) -> list[Ciclo]:
-    """Cria, de uma vez, os trimestres que ainda não existem no ciclo anual."""
+def criar_trimestre(*, ciclo_anual_id: int, trimestre: int, **kwargs) -> Ciclo:
+    return criar_subciclo(
+        ciclo_anual_id=ciclo_anual_id, tipo=Ciclo.Tipo.TRIMESTRAL, numero=trimestre, **kwargs
+    )
+
+
+def gerar_subciclos(
+    ciclo_anual_id: int, *, tipo: str, ator: Ator, escopo: EscopoAcesso
+) -> list[Ciclo]:
+    """Cria, de uma vez, os trimestres ou bimestres que ainda não existem no ciclo anual."""
+    nome = NOMES_SUBCICLO[tipo]
+    campo, _meses, quantidade, _letra = Ciclo.SUBCICLOS[tipo]
     anual = selectors.obter_ciclo(escopo, ciclo_anual_id)
     if anual.tipo != Ciclo.Tipo.ANUAL:
-        raise ErroDeNegocio("Trimestres só podem ser gerados em ciclos anuais.")
+        raise ErroDeNegocio(f"{nome.capitalize()}s só podem ser gerados em ciclos anuais.")
     if not anual_regular(anual):
         raise ErroDeNegocio(
             "A geração automática exige um ciclo anual que comece no dia 1 e dure 12 meses. "
-            "Cadastre os trimestres individualmente, informando as datas."
+            f"Cadastre os {nome}s individualmente, informando as datas."
         )
     existentes = set(
-        anual.trimestres.filter(arquivado_em__isnull=True).values_list("trimestre", flat=True)
+        anual.subciclos.filter(tipo=tipo, arquivado_em__isnull=True).values_list(campo, flat=True)
     )
-    faltantes = [t for t in (1, 2, 3, 4) if t not in existentes]
+    faltantes = [n for n in range(1, quantidade + 1) if n not in existentes]
     if not faltantes:
-        raise ErroDeNegocio("Este ciclo anual já tem os quatro trimestres.")
+        raise ErroDeNegocio(f"Este ciclo anual já tem todos os {nome}s.")
     with transaction.atomic():
         return [
-            criar_trimestre(ciclo_anual_id=anual.pk, trimestre=t, ator=ator, escopo=escopo)
-            for t in faltantes
+            criar_subciclo(ciclo_anual_id=anual.pk, tipo=tipo, numero=n, ator=ator, escopo=escopo)
+            for n in faltantes
         ]
+
+
+def gerar_trimestres(ciclo_anual_id: int, *, ator: Ator, escopo: EscopoAcesso) -> list[Ciclo]:
+    return gerar_subciclos(ciclo_anual_id, tipo=Ciclo.Tipo.TRIMESTRAL, ator=ator, escopo=escopo)
 
 
 def atualizar_ciclo(
@@ -301,7 +341,7 @@ def atualizar_ciclo(
     ator: Ator,
     escopo: EscopoAcesso,
 ) -> Ciclo:
-    """Atualiza datas e o ano (anual) ou o trimestre (trimestral).
+    """Atualiza datas e o ano (anual) ou o número (trimestre/bimestre).
 
     Empresa, tipo e ciclo anual não mudam após a criação.
     """
@@ -309,7 +349,7 @@ def atualizar_ciclo(
     if ciclo.arquivado:
         raise ErroDeNegocio("Reative o ciclo antes de editá-lo.")
     permitidos = {"data_inicio", "data_fim"} | (
-        {"ano"} if ciclo.tipo == Ciclo.Tipo.ANUAL else {"trimestre"}
+        {"ano"} if ciclo.tipo == Ciclo.Tipo.ANUAL else {Ciclo.SUBCICLOS[ciclo.tipo][0]}
     )
     return _gravar_protegido(
         lambda: services.atualizar(
@@ -326,9 +366,9 @@ def arquivar_ciclo(ciclo_id: int, *, versao: int, ator: Ator, escopo: EscopoAces
     ciclo = selectors.obter_ciclo(escopo, ciclo_id)
     if (
         ciclo.tipo == Ciclo.Tipo.ANUAL
-        and ciclo.trimestres.filter(arquivado_em__isnull=True).exists()
+        and ciclo.subciclos.filter(arquivado_em__isnull=True).exists()
     ):
-        raise ErroDeNegocio("Arquive primeiro os trimestres ativos deste ciclo anual.")
+        raise ErroDeNegocio("Arquive primeiro os trimestres e bimestres ativos deste ciclo anual.")
     return services.arquivar(ciclo, versao_esperada=versao, ator=ator)
 
 
@@ -336,17 +376,18 @@ def reativar_ciclo(ciclo_id: int, *, versao: int, ator: Ator, escopo: EscopoAces
     ciclo = selectors.obter_ciclo(escopo, ciclo_id)
     if ciclo.empresa.arquivado:
         raise ErroDeNegocio("Reative a empresa antes de reativar o ciclo.")
-    if ciclo.tipo == Ciclo.Tipo.TRIMESTRAL and ciclo.ciclo_anual.arquivado:
-        raise ErroDeNegocio("Reative o ciclo anual antes de reativar o trimestre.")
-    # Ao voltar a ficar ativo, o ciclo não pode conflitar com outro ciclo ativo.
-    if ciclo.tipo == Ciclo.Tipo.TRIMESTRAL and (
-        Ciclo.objects.filter(
+    if ciclo.eh_subciclo:
+        nome = NOMES_SUBCICLO[ciclo.tipo]
+        if ciclo.ciclo_anual.arquivado:
+            raise ErroDeNegocio(f"Reative o ciclo anual antes de reativar o {nome}.")
+        # Ao voltar a ficar ativo, o ciclo não pode conflitar com outro ciclo ativo.
+        if Ciclo.objects.filter(
             ciclo_anual_id=ciclo.ciclo_anual_id,
-            trimestre=ciclo.trimestre,
+            tipo=ciclo.tipo,
             arquivado_em__isnull=True,
-        ).exists()
-    ):
-        raise ErroDeNegocio(f"O ciclo anual já tem outro {ciclo.trimestre}º trimestre ativo.")
+            **{Ciclo.SUBCICLOS[ciclo.tipo][0]: ciclo.numero},
+        ).exists():
+            raise ErroDeNegocio(f"O ciclo anual já tem outro {ciclo.numero}º {nome} ativo.")
     if ciclo.tipo == Ciclo.Tipo.ANUAL and (
         Ciclo.objects.filter(
             empresa_id=ciclo.empresa_id,

@@ -33,4 +33,9 @@ urlpatterns = [
         views_ciclos.ciclo_gerar_trimestres,
         name="ciclo_gerar_trimestres",
     ),
+    path(
+        "ciclos/<int:pk>/bimestres/gerar/",
+        views_ciclos.ciclo_gerar_bimestres,
+        name="ciclo_gerar_bimestres",
+    ),
 ]

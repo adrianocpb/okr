@@ -7,7 +7,7 @@
     <h1>Ciclos</h1>
     <a class="botao botao--primario" href="{% url 'cadastros:ciclo_anual_novo' %}">{% include "_icone.html" with nome="mais" %}Novo ciclo anual</a>
   </div>
-  <p class="introducao">Cada empresa tem seus próprios ciclos. Os trimestres são criados a partir do ciclo anual correspondente.</p>
+  <p class="introducao">Cada empresa tem seus ciclos anuais; dentro deles, ciclos trimestrais e/ou bimestrais. O número em cada ciclo menor é a quantidade de objetivos nele.</p>
 
   <form method="get" class="filtros" role="search" aria-label="Filtrar ciclos">
     <label>Empresa
@@ -24,12 +24,6 @@
         {% for valor in anos %}<option value="{{ valor }}"{% if valor == ano %} selected{% endif %}>{{ valor }}</option>{% endfor %}
       </select>
     </label>
-    <label>Tipo
-      <select name="tipo">
-        <option value="">Todos</option>
-        {% for valor, rotulo in tipos %}<option value="{{ valor }}"{% if valor == filtros.tipo %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
-      </select>
-    </label>
     <label>Situação
       <select name="situacao">
         {% for valor, rotulo in situacoes.items %}<option value="{{ valor }}"{% if valor == filtros.situacao %} selected{% endif %}>{{ rotulo }}</option>{% endfor %}
@@ -38,33 +32,43 @@
     <label class="filtros__marcacao">
       <span><input type="checkbox" name="arquivados" value="1"{% if filtros.arquivados == "1" %} checked{% endif %}> Mostrar arquivados</span>
     </label>
-    <button type="submit" class="botao botao--tonal">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
+    <button type="submit" class="botao botao--primario">{% include "_icone.html" with nome="filtro" %}Filtrar</button>
     {% if filtrado %}<a class="botao botao--fantasma" href="{% url 'cadastros:ciclo_lista' %}">Limpar filtros</a>{% endif %}
   </form>
 
   {% if pagina.object_list %}
-    <table class="tabela">
-      <thead>
-        <tr>
-          <th scope="col">Empresa</th>
-          <th scope="col">Ciclo</th>
-          <th scope="col">Tipo</th>
-          <th scope="col">Período</th>
-          <th scope="col">Situação</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for ciclo in pagina.object_list %}
-          <tr>
-            <td>{{ ciclo.empresa.sigla }}</td>
-            <td><a href="{% url 'cadastros:ciclo_detalhe' ciclo.pk %}"><strong>{{ ciclo.rotulo }}</strong></a></td>
-            <td>{{ ciclo.get_tipo_display }}</td>
-            <td>{{ ciclo.periodo }}</td>
-            <td>{% include "cadastros/_ciclo_situacao.html" %}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="lista-ciclos">
+      {% for anual in pagina.object_list %}
+        <section class="ciclo-ano cartao" aria-labelledby="ciclo-{{ anual.pk }}">
+          <div class="ciclo-ano__topo">
+            <span class="selo selo--neutro">{{ anual.empresa.sigla }}</span>
+            <div class="ciclo-ano__nome">
+              <a id="ciclo-{{ anual.pk }}" href="{% url 'cadastros:ciclo_detalhe' anual.pk %}"><strong>{{ anual }}</strong></a>
+              <div class="texto-suave">{{ anual.periodo }} · {{ anual.total_objetivos }} objetivo{{ anual.total_objetivos|pluralize }} anua{{ anual.total_objetivos|pluralize:"l,is" }}</div>
+            </div>
+            {% with ciclo=anual %}{% include "cadastros/_ciclo_situacao.html" %}{% endwith %}
+          </div>
+          {% if anual.trimestres_lista or anual.bimestres_lista %}
+            <div class="ciclo-ano__subciclos">
+              {% if anual.trimestres_lista %}
+                <div class="ciclo-ano__grupo">
+                  <span class="rotulo-secao">Trimestres</span>
+                  {% for sub in anual.trimestres_lista %}<a class="chip" href="{% url 'cadastros:ciclo_detalhe' sub.pk %}" title="{{ sub }}: {{ sub.total_objetivos }} objetivo{{ sub.total_objetivos|pluralize }}">{{ sub.sigla_subciclo }} · {{ sub.total_objetivos }}</a>{% endfor %}
+                </div>
+              {% endif %}
+              {% if anual.bimestres_lista %}
+                <div class="ciclo-ano__grupo">
+                  <span class="rotulo-secao">Bimestres</span>
+                  {% for sub in anual.bimestres_lista %}<a class="chip" href="{% url 'cadastros:ciclo_detalhe' sub.pk %}" title="{{ sub }}: {{ sub.total_objetivos }} objetivo{{ sub.total_objetivos|pluralize }}">{{ sub.sigla_subciclo }} · {{ sub.total_objetivos }}</a>{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          {% else %}
+            <p class="texto-suave ciclo-ano__vazio">Sem ciclos menores. <a href="{% url 'cadastros:ciclo_detalhe' anual.pk %}">Dividir em trimestres ou bimestres</a>.</p>
+          {% endif %}
+        </section>
+      {% endfor %}
+    </div>
     {% include "core/_paginacao.html" %}
   {% else %}
     <p class="vazio">
