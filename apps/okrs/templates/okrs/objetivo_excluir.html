@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block titulo %}Excluir objetivo{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+  </nav>
+  <h1>Excluir objetivo</h1>
+
+  <div class="cartao formulario">
+    {% if motivo %}
+      <p class="aviso aviso--alerta">{{ motivo }}</p>
+      <div class="acoes">
+        {% if objetivo.status != "cancelado" %}<a class="botao botao--primario" href="{% url 'okrs:objetivo_cancelar' objetivo.pk %}">Cancelar objetivo</a>{% endif %}
+        <a class="botao" href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">Voltar</a>
+      </div>
+    {% else %}
+      <p>Excluir <strong>{{ objetivo.titulo }}</strong> ({{ objetivo.empresa.sigla }} · {{ objetivo.ciclo.rotulo }}) <strong>não pode ser desfeito</strong>. Use só para objetivos criados por engano ou de teste; a exclusão fica registrada na Auditoria.</p>
+      {% if krs or iniciativas %}
+        <p>Também serão excluídos:</p>
+        <ul>
+          {% for kr in krs %}<li>KR: {{ kr.titulo }}</li>{% endfor %}
+          {% for iniciativa in iniciativas %}<li>Iniciativa: {{ iniciativa.titulo }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="acoes">
+          <button type="submit" class="botao botao--perigo-solido">Excluir definitivamente</button>
+          <a class="botao" href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">Voltar</a>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+{% endblock %}

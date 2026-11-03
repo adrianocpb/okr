@@ -493,6 +493,11 @@ code {
 .botao--fantasma { border-color: transparent; color: var(--text-body); }
 .botao--fantasma:hover { background: var(--surface-hover); }
 .botao--pequeno { min-height: var(--control-height-sm); padding: 0 14px; font-size: 13px; }
+/* Ação destrutiva: contorno no tom de erro; o botão de confirmação é sólido (RC+ apps: danger). */
+.botao--perigo { border-color: var(--danger-text); color: var(--danger-text); }
+.botao--perigo:hover { background: var(--danger-subtle); }
+.botao--perigo-solido { background: var(--danger-text); border-color: var(--danger-text); color: var(--on-primary); }
+.botao--perigo-solido:hover { box-shadow: 0 0 0 3px var(--danger-subtle); }
 
 /* Filtros e campos */
 .filtros {

@@ -2,7 +2,7 @@
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Max
+from django.db.models import Max, Q
 
 from apps.auditoria.models import RegistroAlteracao
 from apps.auditoria.services import registrar_alteracao
@@ -61,6 +61,77 @@ def atualizar_objetivo(
     objetivo = selectors.obter_objetivo(escopo, objetivo_id)
     dados = _resolver_referencias({k: v for k, v in dados.items() if k in CAMPOS_EDITAVEIS})
     return services.atualizar(objetivo, dados, versao_esperada=versao, ator=ator)
+
+
+def cancelar_objetivo(
+    objetivo_id: int, *, motivo: str, versao: int, ator: Ator, escopo: EscopoAcesso
+) -> Objetivo:
+    """Cancela o objetivo (o histórico e os check-ins continuam preservados)."""
+    objetivo = selectors.obter_objetivo(escopo, objetivo_id)
+    if objetivo.status == Objetivo.Status.CANCELADO:
+        raise ErroDeNegocio("Este objetivo já está cancelado.")
+    dados = {"status": Objetivo.Status.CANCELADO, "comentario_status": motivo}
+    return services.atualizar(objetivo, dados, versao_esperada=versao, ator=ator)
+
+
+def motivo_para_nao_excluir(objetivo: Objetivo) -> str:
+    """Vazio quando o objetivo pode ser excluído; senão, o motivo em uma frase.
+
+    Só se exclui objetivo sem nenhum acompanhamento (criado por engano ou de
+    teste). Objetivo acompanhado é cancelado, para não perder histórico.
+    """
+    if objetivo.krs.filter(checkins__isnull=False).exists():
+        return "Este objetivo já tem check-ins registrados: cancele-o em vez de excluir."
+    if objetivo.iniciativas.filter(atualizacoes__isnull=False).exists():
+        return (
+            "Este objetivo já tem atualizações de iniciativas registradas: "
+            "cancele-o em vez de excluir."
+        )
+    return ""
+
+
+@transaction.atomic
+def excluir_objetivo(objetivo_id: int, *, ator: Ator, escopo: EscopoAcesso) -> str:
+    """Exclui o objetivo sem acompanhamento, com seus KRs, marcos e iniciativas.
+
+    A exclusão fica registrada na auditoria do objetivo (com os KRs e as
+    iniciativas removidos), e os vínculos com outros objetivos são desfeitos
+    com registro no histórico do outro objetivo. Devolve o título excluído.
+    """
+    objetivo = selectors.obter_objetivo(escopo, objetivo_id)
+    motivo = motivo_para_nao_excluir(objetivo)
+    if motivo:
+        raise ErroDeNegocio(motivo)
+
+    vinculos = VinculoObjetivo.objects.select_related(
+        "objetivo_anual__ciclo", "objetivo_trimestral__ciclo"
+    ).filter(Q(objetivo_anual=objetivo) | Q(objetivo_trimestral=objetivo))
+    for vinculo in vinculos:
+        _registrar_vinculo(Acao.DESVINCULO, vinculo, ator)
+        vinculo.delete()
+
+    krs = list(objetivo.krs.order_by("pk"))
+    iniciativas = list(objetivo.iniciativas.order_by("pk"))
+    registrar_alteracao(
+        objeto=objetivo,
+        acao=Acao.EXCLUSAO,
+        ator=ator,
+        empresa_id=objetivo.empresa_id,
+        alteracoes={
+            "objetivo": {"antes": f"{objetivo.titulo} ({objetivo.ciclo.rotulo})", "depois": None},
+            "krs": {"antes": [kr.titulo for kr in krs] or None, "depois": None},
+            "iniciativas": {"antes": [i.titulo for i in iniciativas] or None, "depois": None},
+        },
+    )
+    titulo = objetivo.titulo
+    IniciativaKR.objects.filter(iniciativa__objetivo=objetivo).delete()
+    for iniciativa in iniciativas:
+        iniciativa.delete()
+    Marco.objects.filter(kr__objetivo=objetivo).delete()
+    for kr in krs:
+        kr.delete()
+    objetivo.delete()
+    return titulo
 
 
 def _registrar_vinculo(acao: str, vinculo: VinculoObjetivo, ator: Ator) -> None:

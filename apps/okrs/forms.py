@@ -320,3 +320,12 @@ class IniciativaForm(forms.Form):
 
     def kr_ids(self) -> list[int]:
         return [kr.pk for kr in self.cleaned_data["krs"]]
+
+
+class CancelarObjetivoForm(forms.Form):
+    motivo = forms.CharField(
+        label="Motivo do cancelamento",
+        widget=forms.Textarea(attrs={"rows": 3}),
+        help_text="Fica registrado no objetivo e no histórico.",
+    )
+    versao = CampoVersao()

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cancelar objetivo{% endblock %}
+
+{% block conteudo %}
+  <nav class="trilha" aria-label="Trilha">
+    <a href="{% url 'okrs:objetivo_lista' %}">Objetivos</a> ›
+    <a href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">{{ objetivo.titulo|truncatechars:60 }}</a>
+  </nav>
+  <h1>Cancelar objetivo</h1>
+
+  <form method="post" class="formulario cartao" novalidate>
+    {% csrf_token %}
+    <p>O objetivo <strong>{{ objetivo.titulo }}</strong> sai do Painel e deixa de aceitar check-ins. Ele continua na lista de Objetivos (filtro "Cancelado") com todo o histórico.</p>
+    {{ form }}
+    <div class="acoes">
+      <button type="submit" class="botao botao--primario">Cancelar objetivo</button>
+      <a class="botao" href="{% url 'okrs:objetivo_detalhe' objetivo.pk %}">Voltar</a>
+    </div>
+  </form>
+{% endblock %}
