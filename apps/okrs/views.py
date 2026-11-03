@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -14,7 +14,14 @@ from apps.core.views_apoio import executar as _executar
 from apps.core.views_apoio import filtros as _filtros
 from apps.core.views_apoio import pagina as _pagina
 from apps.okrs import selectors, services
-from apps.okrs.forms import IniciativaForm, KRForm, MarcoForm, ObjetivoForm, VinculoForm
+from apps.okrs.forms import (
+    CancelarObjetivoForm,
+    IniciativaForm,
+    KRForm,
+    MarcoForm,
+    ObjetivoForm,
+    VinculoForm,
+)
 
 
 def _inteiro(valor: str) -> int | None:
@@ -100,6 +107,54 @@ def objetivo_novo(request):
             return redirect("okrs:objetivo_detalhe", pk=objetivo.pk)
     return render(
         request, "okrs/objetivo_form.html", {"form": form, "empresa": empresa, "objetivo": None}
+    )
+
+
+def objetivo_cancelar(request, pk):
+    escopo = escopo_da_requisicao(request)
+    objetivo = selectors.obter_objetivo(escopo, pk)
+    form = CancelarObjetivoForm(request.POST or None, initial={"versao": objetivo.versao})
+    if request.method == "POST" and form.is_valid():
+        cancelado = _executar(
+            form,
+            lambda: services.cancelar_objetivo(
+                pk,
+                motivo=form.cleaned_data["motivo"],
+                versao=form.cleaned_data["versao"],
+                ator=ator_da_requisicao(request),
+                escopo=escopo,
+            ),
+        )
+        if cancelado:
+            messages.success(request, "Objetivo cancelado.")
+            return redirect("okrs:objetivo_detalhe", pk=pk)
+    return render(request, "okrs/objetivo_cancelar.html", {"objetivo": objetivo, "form": form})
+
+
+def objetivo_excluir(request, pk):
+    """Exclusão limitada: só o Administrador, só objetivo sem acompanhamento."""
+    if not request.user.administrador:
+        raise PermissionDenied
+    escopo = escopo_da_requisicao(request)
+    objetivo = selectors.obter_objetivo(escopo, pk)
+    motivo = services.motivo_para_nao_excluir(objetivo)
+    if request.method == "POST" and not motivo:
+        try:
+            titulo = services.excluir_objetivo(pk, ator=ator_da_requisicao(request), escopo=escopo)
+        except ErroDeNegocio as erro:
+            motivo = erro.mensagem
+        else:
+            messages.success(request, f"Objetivo “{titulo}” excluído.")
+            return redirect("okrs:objetivo_lista")
+    return render(
+        request,
+        "okrs/objetivo_excluir.html",
+        {
+            "objetivo": objetivo,
+            "motivo": motivo,
+            "krs": objetivo.krs.order_by("pk"),
+            "iniciativas": objetivo.iniciativas.order_by("pk"),
+        },
     )
 
 

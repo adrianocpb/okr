@@ -14,6 +14,8 @@
     <h1>{{ objetivo.titulo }}</h1>
     <div class="acoes">
       <a class="botao" href="{% url 'acompanhamento:linha_do_tempo' objetivo.pk %}">Linha do tempo</a>
+      {% if objetivo.status != "cancelado" %}<a class="botao" href="{% url 'okrs:objetivo_cancelar' objetivo.pk %}">Cancelar objetivo</a>{% endif %}
+      {% if user.administrador %}<a class="botao botao--perigo" href="{% url 'okrs:objetivo_excluir' objetivo.pk %}">Excluir</a>{% endif %}
       <a class="botao botao--primario" href="{% url 'okrs:objetivo_editar' objetivo.pk %}">Editar</a>
     </div>
   </div>

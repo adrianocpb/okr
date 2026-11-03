@@ -23,6 +23,7 @@ class RegistroAlteracao(models.Model):
         REATIVACAO = "reativacao", "Reativação"
         VINCULO = "vinculo", "Vínculo"
         DESVINCULO = "desvinculo", "Desvínculo"
+        EXCLUSAO = "exclusao", "Exclusão"
 
     data_hora = models.DateTimeField("data e hora", default=timezone.now, editable=False)
     tipo_conteudo = models.ForeignKey(

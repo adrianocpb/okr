@@ -22,6 +22,10 @@ ROTULOS_ESPECIAIS = {
     "objetivo_trimestral": "Objetivo trimestral",
     "kr": "KR",
     "marco": "Marco",
+    # Registro de exclusão do objetivo (o que foi removido junto com ele).
+    "objetivo": "Objetivo",
+    "krs": "KRs",
+    "iniciativas": "Iniciativas",
 }
 DATA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}")
 
@@ -50,7 +54,7 @@ def _rotulo(modelo: type[models.Model], campo: str) -> str:
         return ROTULOS_ESPECIAIS[campo]
     try:
         return str(modelo._meta.get_field(campo).verbose_name).capitalize()
-    except FieldDoesNotExist:
+    except FieldDoesNotExist, AttributeError:  # relação reversa não tem verbose_name
         return campo
 
 
@@ -59,6 +63,8 @@ def _texto(valor) -> str:
         return "—"
     if isinstance(valor, bool):
         return "Sim" if valor else "Não"
+    if isinstance(valor, list):
+        return "; ".join(str(item) for item in valor) or "—"
     if isinstance(valor, str):
         if not DATA_ISO.match(valor):
             return valor
@@ -100,6 +106,8 @@ class _Tradutor:
     def __call__(self, campo: str, valor) -> str:
         if valor is None or valor == "":
             return "—"
+        if isinstance(valor, list):
+            return _texto(valor)
         opcoes = _choices(self.modelo, campo)
         if valor in opcoes:
             return str(opcoes[valor])
@@ -178,7 +186,9 @@ def entradas_legiveis(registros) -> list[EntradaHistorico]:
                 mudancas=mudancas,
                 tipo_registro=str(modelo._meta.verbose_name).capitalize() if modelo else "",
                 objeto_descricao=registro.objeto_descricao,
-                url_objeto=_url_do_objeto(tipo, registro.objeto_id),
+                url_objeto=""
+                if registro.acao == RegistroAlteracao.Acao.EXCLUSAO
+                else _url_do_objeto(tipo, registro.objeto_id),
             )
         )
     return entradas
