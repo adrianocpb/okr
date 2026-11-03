@@ -70,6 +70,7 @@ def test_tela_de_entrada_tem_fundo_ilustrado(cliente_anonimo):
 
     assert 'class="entrada__fundo"' in conteudo
     assert 'aria-hidden="true"' in conteudo  # ilustração decorativa
+    assert "{#" not in conteudo  # comentário de template não vaza para a página
 
 
 def test_senha_errada_mostra_mensagem(cliente_anonimo):

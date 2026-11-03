@@ -128,10 +128,12 @@ class Objetivo(ModeloBase):
 
 
 class VinculoObjetivo(models.Model):
-    """Desdobramento explícito: objetivo trimestral ligado a um objetivo anual.
+    """Desdobramento explícito: objetivo de um ciclo menor ligado a um objetivo anual.
 
-    Opcional e N:N (um trimestral pode contribuir para mais de um anual). Sempre
-    dentro da mesma empresa (Q-06) e com o trimestre pertencente ao ano do anual.
+    O ciclo menor pode ser trimestre ou bimestre (o campo mantém o nome
+    `objetivo_trimestral` desde antes dos bimestres). Opcional e N:N (um objetivo
+    pode contribuir para mais de um anual). Sempre dentro da mesma empresa (Q-06)
+    e com o ciclo menor pertencente ao ano do anual.
     """
 
     objetivo_anual = models.ForeignKey(
@@ -164,13 +166,15 @@ class VinculoObjetivo(models.Model):
         anual, trimestral = self.objetivo_anual, self.objetivo_trimestral
         if anual.ciclo.tipo != Ciclo.Tipo.ANUAL:
             raise ValidationError("O objetivo de destino deve estar em um ciclo anual.")
-        if trimestral.ciclo.tipo != Ciclo.Tipo.TRIMESTRAL:
-            raise ValidationError("O objetivo de origem deve estar em um ciclo trimestral.")
+        if not trimestral.ciclo.eh_subciclo:
+            raise ValidationError(
+                "O objetivo de origem deve estar em um ciclo trimestral ou bimestral."
+            )
         if anual.empresa_id != trimestral.empresa_id:
             raise ValidationError("Só é possível vincular objetivos da mesma empresa.")
         if trimestral.ciclo.ciclo_anual_id != anual.ciclo_id:
             raise ValidationError(
-                "O trimestre do objetivo deve pertencer ao ciclo anual do objetivo de destino."
+                "O ciclo do objetivo deve pertencer ao ciclo anual do objetivo de destino."
             )
         if (
             VinculoObjetivo.objects.filter(objetivo_anual=anual, objetivo_trimestral=trimestral)

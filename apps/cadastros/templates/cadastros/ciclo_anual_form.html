@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Novo ciclo anual{% endblock %}
 
@@ -10,12 +11,48 @@
     <p class="aviso aviso--neutro">Não há empresas ativas. <a href="{% url 'cadastros:empresa_nova' %}">Cadastre uma empresa</a> antes de criar ciclos.</p>
   {% endif %}
 
-  <form method="post" class="formulario cartao" novalidate>
-    {% csrf_token %}
-    {{ form }}
-    <div class="acoes">
-      <button type="submit" class="botao botao--primario">Salvar</button>
-      <a class="botao" href="{% url 'cadastros:ciclo_lista' %}">Cancelar</a>
-    </div>
-  </form>
+  <div class="ciclo-novo">
+    <form method="post" class="formulario cartao ciclo-novo__form" novalidate data-ciclo-novo>
+      {% csrf_token %}
+      {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+      {% for campo in form %}
+        {% if campo.name != "dividir_trimestres" and campo.name != "dividir_bimestres" %}
+          <div>{{ campo.as_field_group }}</div>
+        {% endif %}
+      {% endfor %}
+
+      <fieldset class="divisao">
+        <legend>Ciclos menores <span class="texto-suave">(opcional)</span></legend>
+        {% for campo in form %}
+          {% if campo.name == "dividir_trimestres" or campo.name == "dividir_bimestres" %}
+            <label class="divisao__opcao" for="{{ campo.id_for_label }}">
+              {{ campo }}
+              <span><strong>{{ campo.label }}</strong><br><span class="texto-suave">{{ campo.help_text }}</span></span>
+            </label>
+            {{ campo.errors }}
+          {% endif %}
+        {% endfor %}
+        <p class="texto-suave">Pode marcar as duas, nenhuma, ou dividir depois na tela do ciclo.</p>
+      </fieldset>
+
+      <div class="acoes">
+        <button type="submit" class="botao botao--primario" data-ciclo-novo-botao>Salvar</button>
+        <a class="botao" href="{% url 'cadastros:ciclo_lista' %}">Cancelar</a>
+      </div>
+    </form>
+
+    <section class="cartao ciclo-novo__previa" aria-labelledby="previa-titulo" aria-live="polite" data-ciclo-previa hidden>
+      <h2 id="previa-titulo">Serão criados</h2>
+      <p class="texto-suave" data-previa-resumo></p>
+      <div data-previa-trimestres>
+        <p class="rotulo-secao">Trimestres</p>
+        <ul class="previa-lista" data-previa-lista="3"></ul>
+      </div>
+      <div data-previa-bimestres>
+        <p class="rotulo-secao">Bimestres</p>
+        <ul class="previa-lista" data-previa-lista="2"></ul>
+      </div>
+    </section>
+  </div>
+  <script src="{% static 'js/ciclo_novo.js' %}" defer></script>
 {% endblock %}

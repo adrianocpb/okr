@@ -197,7 +197,7 @@ def test_tela_do_objetivo_anual_mostra_desdobramento(client, alfa):
 
     conteudo = client.get(reverse("okrs:objetivo_detalhe", args=[anual.pk])).content.decode()
 
-    assert "Desdobramento por trimestre" in conteudo
+    assert "Desdobramento nos ciclos menores" in conteudo
     assert "Objetivo do primeiro trimestre" in conteudo
     assert "KR trimestral" in conteudo
     assert "não há valor combinado" in conteudo

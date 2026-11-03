@@ -98,10 +98,10 @@
     {% endif %}
   </section>
 
-  {% if objetivo.ciclo.tipo == "trimestral" %}
+  {% if objetivo.ciclo.eh_subciclo %}
     <section class="cartao" aria-labelledby="titulo-vinculos">
       <h2 id="titulo-vinculos">Objetivos anuais vinculados</h2>
-      <p class="texto-suave">Vínculo opcional: indica para quais objetivos de {{ objetivo.ciclo.ano|unlocalize }} este objetivo trimestral contribui.</p>
+      <p class="texto-suave">Vínculo opcional: indica para quais objetivos de {{ objetivo.ciclo.ano|unlocalize }} este objetivo do {{ objetivo.ciclo.sigla_subciclo }} contribui.</p>
       {% if vinculos.anuais %}
         <ul class="lista-simples">
           {% for vinculo in vinculos.anuais %}
@@ -129,8 +129,8 @@
     </section>
   {% else %}
     <section class="cartao" aria-labelledby="titulo-vinculos">
-      <h2 id="titulo-vinculos">Desdobramento por trimestre</h2>
-      <p class="texto-suave">Objetivos trimestrais vinculados a este objetivo, lado a lado. Cada KR mantém sua própria medida; não há valor combinado entre KRs nem entre trimestres. O vínculo é feito na tela do objetivo trimestral.</p>
+      <h2 id="titulo-vinculos">Desdobramento nos ciclos menores</h2>
+      <p class="texto-suave">Objetivos dos trimestres e bimestres vinculados a este objetivo, lado a lado. Cada KR mantém sua própria medida; não há valor combinado entre KRs nem entre períodos. O vínculo é feito na tela do objetivo do ciclo menor.</p>
       {% if vinculos.trimestrais %}
         <div class="desdobramento">
           {% for coluna in desdobramento %}
@@ -157,7 +157,7 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="texto-suave">Nenhum objetivo trimestral vinculado.</p>
+        <p class="texto-suave">Nenhum objetivo de trimestre ou bimestre vinculado.</p>
       {% endif %}
     </section>
   {% endif %}
