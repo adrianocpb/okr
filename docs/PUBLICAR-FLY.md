@@ -1,7 +1,13 @@
 # Publicar no Fly.io
 
+> **Situação atual (10/11/2026): não publicado.** O piloto em rcokr.fly.dev foi desligado
+> (app `rcokr` apagado no Fly.io, com o disco e os dados, sem backup) e o sistema voltou a
+> ser um MVP local (`iniciar.bat`). O deploy automático pelo GitHub Actions também foi
+> removido. Este roteiro fica como referência para republicar: o nome `rcokr` pode já não
+> estar disponível; se escolher outro, troque-o no `fly.toml` e nos comandos abaixo.
+
 O sistema roda em uma máquina pequena em São Paulo (`gru`), com o banco SQLite num
-disco permanente (`/data`). Endereço: <https://rcokr.fly.dev>.
+disco permanente (`/data`). Endereço usado no piloto: <https://rcokr.fly.dev>.
 
 - **Acesso:** login por e-mail e senha. Todas as telas exigem login, menos a
   verificação de saúde (`/saude/`). Após 5 tentativas erradas, o e-mail ou o
