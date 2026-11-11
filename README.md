@@ -2,7 +2,13 @@
 
 Aplicação web para cadastro, acompanhamento e análise de OKRs (Objectives and Key Results) de múltiplas empresas de um grupo empresarial.
 
-> **Situação atual:** Etapa 8 (empresas, pessoas, ciclos, objetivos, KRs, check-ins e iniciativas). Protótipo local completo (etapas 1 a 11): cadastros, ciclos, objetivos, KRs, check-ins, iniciativas, painel (página inicial), linha do tempo, auditoria e gráficos de evolução. As etapas 12 a 14 (PostgreSQL, login e servidor) ficam para a fase de publicação. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+> **Situação atual (10/11/2026):** MVP usado **só localmente**, quando necessário. O piloto publicado em rcokr.fly.dev foi desligado e os dados dele não foram guardados; ao retomar, os cadastros começam do zero. Funcionalidades: cadastros, ciclos anuais, trimestrais e bimestrais, objetivos, KRs, check-ins, iniciativas, painel, linha do tempo, auditoria, gráficos e login por pessoa. Veja o [Plano de Implementação](docs/PLANO_IMPLEMENTACAO.md).
+
+## Uso no dia a dia (Windows)
+
+Dê dois cliques em **`iniciar.bat`**, na pasta do projeto. Ele atualiza o banco, liga o sistema e abre <http://127.0.0.1:8000> no navegador. Para desligar, feche a janela preta (ou aperte Ctrl + C nela).
+
+Na primeira vez em um computador novo, siga antes a "Primeira execução" abaixo.
 
 ## Requisitos
 
@@ -35,7 +41,7 @@ Copy-Item .env.example .env
 
 Acesse <http://127.0.0.1:8000> e entre com o e-mail e a senha temporária; no primeiro acesso o sistema pede uma senha nova. As demais contas são criadas pelo Administrador no menu **Usuários**.
 
-Para publicar no Fly.io, veja [docs/PUBLICAR-FLY.md](docs/PUBLICAR-FLY.md).
+Hoje o sistema não está publicado. Para voltar a publicar no Fly.io, veja [docs/PUBLICAR-FLY.md](docs/PUBLICAR-FLY.md).
 
 ## Testes e qualidade
 
